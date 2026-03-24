@@ -150,6 +150,10 @@ app.post("/api/homework/:character/:task", async (req, res) => {
   }
 });
 
+app.get("/test", (req, res) => {
+  res.send("OK");
+});
+
 // ================= 서버 실행 =================
 const PORT = process.env.PORT || 3000;
 
