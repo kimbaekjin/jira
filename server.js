@@ -107,11 +107,19 @@ app.get("/api/raid/:character", async (req, res) => {
 });
 
 // ================= HOMEWORK =================
-const { rows } = await pool.query(`
-  SELECT table_name
-  FROM information_schema.tables
-  WHERE table_name = 'character_raid'
-`);
+(async () => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_name = 'character_raid'
+    `);
+    console.log(rows);
+  } catch (e) {
+    console.error("DB CHECK ERROR:", e);
+  }
+})();
+
 console.log(rows);
 // 🔹 조회
 app.get("/api/homework/:character", async (req, res) => {
