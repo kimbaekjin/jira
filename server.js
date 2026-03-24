@@ -116,7 +116,7 @@ app.get("/api/raid/:character", async (req, res) => {
     `);
     console.log(rows);
   } catch (e) {
-    console.error("DB CHECK ERROR:", e);
+    console.error(e);
   }
 })();
 
