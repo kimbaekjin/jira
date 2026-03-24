@@ -119,8 +119,6 @@ app.get("/api/raid/:character", async (req, res) => {
     console.error(e);
   }
 })();
-
-console.log(rows);
 // 🔹 조회
 app.get("/api/homework/:character", async (req, res) => {
   const { character } = req.params;
