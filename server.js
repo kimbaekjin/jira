@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // ================= DB 연결 =================
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // 🔥 Supabase 필수
+  ssl: { rejectUnauthorized: false } // Supabase 등 필요
 });
 
 // ================= 루트 =================
@@ -58,25 +58,31 @@ app.get("/character/:name", async (req, res) => {
 });
 
 // ================= RAID =================
-
-// 🔹 저장
 app.post("/api/raid/save", async (req, res) => {
   const { character, raids } = req.body;
 
-  try {
-    // 기존 삭제
-    await pool.query(
-      `DELETE FROM public.character_raid WHERE character_name = $1`,
-      [character]
-    );
+  if (!Array.isArray(raids)) return res.status(400).json({ error: "raids 배열 필요" });
 
-    // 새로 저장
+  try {
     for (const r of raids) {
       await pool.query(
         `INSERT INTO public.character_raid
-         (character_name, raid_name, level, gold, selected)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [character, r.raid, r.level, r.gold, r.selected]
+         (character_name, raid_name, level, gold, selected, bus_fee)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (character_name, raid_name)
+         DO UPDATE SET
+           level = EXCLUDED.level,
+           gold = EXCLUDED.gold,
+           selected = EXCLUDED.selected,
+           bus_fee = EXCLUDED.bus_fee`,
+        [
+          character,
+          r.raid,
+          r.level,
+          r.gold ?? false,
+          r.selected ?? true,
+          Number(r.busFee) || 0
+        ]
       );
     }
 
@@ -87,39 +93,36 @@ app.post("/api/raid/save", async (req, res) => {
   }
 });
 
-// 🔹 조회 (팝업 복원용)
+// 🔹 RAID 조회 (팝업/카드 복원용)
+// server.js - RAID 조회
 app.get("/api/raid/:character", async (req, res) => {
   const { character } = req.params;
 
   try {
     const { rows } = await pool.query(
-      `SELECT raid_name AS raid, level, gold, selected
-       FROM public.character_raid
+      `SELECT raid_name AS raid, level, gold, selected, bus_fee
+       FROM character_raid
        WHERE character_name = $1`,
       [character]
     );
 
-    res.json(rows);
+    // DB 컬럼 → 프론트용 camelCase
+    const formatted = rows.map(r => ({
+      raid: r.raid,
+      level: r.level,
+      gold: r.gold,
+      selected: r.selected,
+      busFee: r.bus_fee ?? 0  // ⚡ 여기 핵심
+    }));
+
+    res.json(formatted);
   } catch (err) {
     console.error("RAID LOAD ERROR:", err);
-    res.status(500).json({ error: "raid 조회 실패" });
+    res.status(500).json([]);
   }
 });
 
 // ================= HOMEWORK =================
-(async () => {
-  try {
-    const { rows } = await pool.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_name = 'character_raid'
-    `);
-    console.log(rows);
-  } catch (e) {
-    console.error(e);
-  }
-})();
-// 🔹 조회
 app.get("/api/homework/:character", async (req, res) => {
   const { character } = req.params;
 
@@ -131,14 +134,14 @@ app.get("/api/homework/:character", async (req, res) => {
       [character]
     );
 
-    res.json(rows);
+    res.json(rows || []);
   } catch (err) {
     console.error("HOMEWORK LOAD ERROR:", err);
-    res.status(500).json({ error: "DB 오류" });
+    res.status(500).json([]);
   }
 });
 
-// 🔹 저장
+// 🔹 HOMEWORK 저장
 app.post("/api/homework/:character/:task", async (req, res) => {
   const { character, task } = req.params;
   const { checked, gauge } = req.body;
@@ -160,6 +163,7 @@ app.post("/api/homework/:character/:task", async (req, res) => {
   }
 });
 
+// ================= 로그 미들웨어 =================
 app.use((req, res, next) => {
   console.log("REQ:", req.method, req.url);
   next();
