@@ -1,0 +1,140 @@
+body {
+  background: linear-gradient(135deg, #fff0f5, #ffdce5);
+  font-family: sans-serif;
+  padding: 30px;
+}
+
+.homework {
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  background: #fff0f5;
+  border-top: 1px solid #ffdce5;
+}
+
+.hw-gauge {
+  position: relative;
+  width: 100%;
+  height: 30px;
+  background: #eee;
+  border-radius: 5px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.hw-group-title.daily-title {
+  font-weight: 900;
+  font-size: 16px;
+  color: #d6336c;
+  margin-top: 10px;
+}
+
+/* 레이드 숙제 제목 일반 */
+.hw-group-title.raid-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #b3477a;
+  margin-top: 10px;
+}
+
+.hw-gauge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;  /* 40/200 = 20% 단위 */
+  width: 1px;
+  height: 100%;
+  background: rgba(0,0,0,0.1);
+}
+
+.hw-gauge::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 40%;
+  width: 1px;
+  height: 100%;
+  background: rgba(0,0,0,0.1);
+}
+/* 반복적으로 60%, 80% 추가 */
+.hw-gauge div:nth-child(1)::before { /* optional for dynamic */ }
+
+.hw-gauge-fill {
+  height: 100%;
+  width: 0%;
+  background: green;    /* 게이지 색 */
+  transition: width 0.3s ease;
+
+  /* 숫자 중앙 정렬 */
+  display: flex;
+  align-items: center;     /* 세로 중앙 */
+  justify-content: center; /* 가로 중앙 */
+  color: #fff;             /* 숫자 색 */
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.hw-checkbox {
+  margin-right: 6px;
+  transform: scale(1.2);
+}
+
+.card {
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffffff, #fff5f7);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(255, 182, 193, 0.6);
+}
+
+.img-box {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+}
+
+.char-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(to top, rgba(255,182,193,0.9), rgba(255,182,193,0.0));
+  color: #fff;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: bold;
+}
+.level {
+  font-size: 14px;
+  margin-top: 4px;
+}
+.power {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  padding: 10px;
+  max-width: 900px;
+  margin: 0 auto;
+}
