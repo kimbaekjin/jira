@@ -150,6 +150,8 @@ app.post("/api/homework/:character/:task", async (req, res) => {
 });
 
 // ================= 서버 실행 =================
-app.listen(3000, () => {
-  console.log("Server running: http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
