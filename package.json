@@ -1,9 +1,10 @@
 {
-  "name": "railway-test",
+  "name": "jira",
   "version": "1.0.0",
-  "type": "module",
+  "main": "server.js",
   "scripts": {
-    "start": "node server2.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
