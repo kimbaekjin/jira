@@ -3,6 +3,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
+import path from "path";
 
 const app = express();
 app.use(cors());
@@ -17,7 +18,7 @@ const pool = new Pool({
 
 // ================= 루트 =================
 app.get("/", (req, res) => {
-  res.sendFile(new URL('./public/index.html', import.meta.url).pathname);
+  res.sendFile(path.resolve("./public/index.html"));
 });
 
 // ================= 캐릭터 API =================
