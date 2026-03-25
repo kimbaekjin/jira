@@ -140,8 +140,8 @@ body {
 }
 
 .heart-badge {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   position: relative;
   background: #ff6b81;
   transform: rotate(45deg);
@@ -160,8 +160,8 @@ body {
 .heart-badge::before,
 .heart-badge::after {
   content: "";
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   position: absolute;
   background: #ff6b81;
   border-radius: 50%;

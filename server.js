@@ -65,23 +65,34 @@ app.post("/api/raid/save", async (req, res) => {
 
   try {
     for (const r of raids) {
+    console.log("DB에 넣을 레이드 데이터:", [
+    character,
+    r.raid,
+    r.level,
+    r.gold ?? false,
+    r.selected ?? true,
+    Number(r.busFee) || 0,
+    r.completed ?? false
+  ]);
       await pool.query(
         `INSERT INTO public.character_raid
-         (character_name, raid_name, level, gold, selected, bus_fee)
-         VALUES ($1, $2, $3, $4, $5, $6)
+         (character_name, raid_name, level, gold, selected, bus_fee, completed)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (character_name, raid_name)
          DO UPDATE SET
            level = EXCLUDED.level,
            gold = EXCLUDED.gold,
            selected = EXCLUDED.selected,
-           bus_fee = EXCLUDED.bus_fee`,
+           bus_fee = EXCLUDED.bus_fee,
+           completed = EXCLUDED.completed`,
         [
           character,
           r.raid,
           r.level,
           r.gold ?? false,
           r.selected ?? true,
-          Number(r.busFee) || 0
+          Number(r.busFee) || 0,
+          r.completed ?? false
         ]
       );
     }
@@ -100,19 +111,26 @@ app.get("/api/raid/:character", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT raid_name AS raid, level, gold, selected, bus_fee
+      `SELECT
+         raid_name AS raid,
+         level,
+         gold,
+         selected,
+         bus_fee,
+         completed
        FROM character_raid
        WHERE character_name = $1`,
       [character]
     );
 
-    // DB 컬럼 → 프론트용 camelCase
+    // DB → 프론트 변환
     const formatted = rows.map(r => ({
       raid: r.raid,
       level: r.level,
       gold: r.gold,
       selected: r.selected,
-      busFee: r.bus_fee ?? 0  // ⚡ 여기 핵심
+      busFee: r.bus_fee ?? 0,
+      completed: r.completed ?? false // ✅ 핵심 추가
     }));
 
     res.json(formatted);

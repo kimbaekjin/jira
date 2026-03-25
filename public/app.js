@@ -82,89 +82,177 @@ function updateCardRaidUI(card, selectedRaids) {
   });
 }
 
-// 레이드 디스플레이 렌더링
-function renderRaidDisplay(displayArea, data) {
+function renderRaidDisplay(displayArea, data, characterName) {
   displayArea.innerHTML = "";
-  if (data.length === 0) {
+
+  if (!data || data.length === 0) {
     displayArea.style.display = "none";
     return;
   }
+
   displayArea.style.display = "block";
 
   const colors = {
-    "노말": "#fff5e6", "하드": "#fff176", "나메": "#f1f1f1",
-    "1단계": "#3498db", "2단계": "#3498db", "3단계": "#3498db"
+    "노말": "#ffe3f3",
+    "하드": "#A8E6CF",
+    "나메": "#EAEAEA",
+    "1단계": "#A8E6CF",
+    "2단계": "#FFD3B6",
+    "3단계": "#1F2937"
   };
 
   let totalGold = 0;
 
   data.forEach(r => {
-        const row = document.createElement("div");
-        const heartWrap = document.createElement("div");
-        heartWrap.style.width = "150px";
-        heartWrap.style.height = "150px";
-        heartWrap.style.position = "relative";
-        heartWrap.style.marginRight = "8px";
+    // 선택 안 된 레이드는 패스
+    if (!r.level && (!r.busFee || r.busFee === 0)) return;
 
-        row.style.display = "flex";
-        row.style.alignItems = "center";
-        row.style.marginBottom = "10px";
-        row.style.minHeight = "60px";
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.marginBottom = "10px";
+    row.style.minHeight = "60px";
 
-        // ❤️ 하트 badge
-        const heart = document.createElement("div");
-        heart.className = "heart-badge";
-        heart.style.position = "absolute";
-        heart.style.top = "50%";
-        heart.style.left = "50%";
-        heart.style.transform = "translate(-50%, -50%) rotate(45deg)";
+    const heartWrap = document.createElement("div");
+    heartWrap.style.width = "150px";
+    heartWrap.style.height = "150px";
+    heartWrap.style.position = "relative";
+    heartWrap.style.marginRight = "8px";
 
-        // 텍스트 (회전 보정용 span)
-        const text = document.createElement("span");
-        text.style.position = "relative";
-        text.style.zIndex = "1";
-        text.style.fontWeight = "700";
-        text.style.transform = "rotate(-45deg)";
-        text.style.fontSize = "20px";
-        text.style.textAlign = "center";
-        text.innerText = r.level ? `${r.raid} ${r.level}` : r.raid;
+    // ❤️ 하트
+    const heart = document.createElement("div");
+    heart.className = "heart-badge";
+    heart.style.position = "absolute";
+    heart.style.top = "50%";
+    heart.style.left = "50%";
+    heart.style.transform = "translate(-50%, -50%) rotate(45deg)";
+    heart.style.cursor = "pointer";
 
-        // 난이도 색 (원하면 텍스트 색만 적용)
-        const baseColor = colors[r.level] || "#fff";
-        text.style.color = baseColor;
+    const text = document.createElement("span");
+    text.style.position = "relative";
+    text.style.zIndex = "1";
+    text.style.fontFamily = "Pretendard, sans-serif";
+    text.style.fontWeight = "900";
+    text.style.transform = "rotate(-45deg)";
+    text.style.fontSize = "15px";
+    text.style.textAlign = "center";
+    text.innerText = r.level ? `${r.raid} ${r.level}` : r.raid;
 
-        // 조립
-        heart.appendChild(text);
-        heartWrap.appendChild(heart);
-        row.appendChild(heartWrap);
+    const baseColor = colors[r.level] || "#fff";
+    text.style.color = baseColor;
+
+    heart.appendChild(text);
+    heartWrap.appendChild(heart);
+    row.appendChild(heartWrap);
+
+    // ----------------- 골드 박스 -----------------
+    const goldBox = document.createElement("div");
+    goldBox.style.background = "#ffe4ec"; // 연분홍
+    goldBox.style.padding = "10px";
+    goldBox.style.borderRadius = "10px";
+    goldBox.style.marginLeft = "10px";
+    goldBox.style.minWidth = "140px";
+    goldBox.style.fontSize = "12px";
+    goldBox.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+
+    let raidGold = 0;
+    let busGold = 0;
 
     if (r.gold) {
-      const goldValue = raidGoldTable[r.raid]?.[r.level] || 0;
-      totalGold += goldValue;
-
-      const gold = document.createElement("span");
-      gold.innerText = ` ${goldValue.toLocaleString()}G`;
-      gold.style.color = "gold";
-      gold.style.marginLeft = "5px";
-      row.appendChild(gold);
+      raidGold = raidGoldTable[r.raid]?.[r.level] || 0;
+      totalGold += raidGold;
     }
-
     if (r.busFee && r.busFee > 0) {
-      totalGold += r.busFee;
-      const busSpan = document.createElement("span");
-      busSpan.innerText = ` +${r.busFee.toLocaleString()}G`;
-      busSpan.style.color = "#f39c12";
-      busSpan.style.marginLeft = "5px";
-      row.appendChild(busSpan);
+      busGold = r.busFee;
+      totalGold += busGold;
     }
+
+    const sum = raidGold + busGold;
+
+    goldBox.innerHTML = `
+      <div>레이드 골드: ${raidGold.toLocaleString()}G</div>
+      <div>버스 골드: ${busGold.toLocaleString()}G</div>
+      <div style="font-weight:700; margin-top:4px;">
+        합계: ${sum.toLocaleString()}G
+      </div>
+    `;
+
+    row.appendChild(goldBox);
+
+    // ----------------- 하트 클릭 완료 기능 -----------------
+    let completed = r.completed || false;
+
+    function updateCompletedStyle() {
+      if (completed) {
+        // 텍스트 취소선 + 투명화
+        text.style.textDecoration = "line-through";
+        text.style.opacity = "0.5";
+
+        // 하트 반투명
+        heart.style.opacity = "0.4";
+
+        // 연분홍 박스 완료 표시
+        goldBox.style.opacity = "0.3";
+        goldBox.style.textDecoration = "line-through";
+      } else {
+        // 원래 상태로 복원
+        text.style.textDecoration = "none";
+        text.style.opacity = "1";
+
+        heart.style.opacity = "1";
+
+        goldBox.style.opacity = "1";
+        goldBox.style.textDecoration = "none";
+      }
+    }
+
+    updateCompletedStyle();
+
+    heart.addEventListener("click", async () => {
+      completed = !completed;
+
+      const target = data.find(x => x.raid === r.raid);
+      if (target) target.completed = completed;
+
+      updateCompletedStyle();
+
+      try {
+        await fetch("/api/raid/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            character: characterName,
+            raids: data.map(x => ({
+              raid: x.raid,
+              level: x.level,
+              gold: x.gold || false,
+              selected: true,
+              busFee: Number(x.busFee) || 0,
+              completed: x.completed || false
+            }))
+          })
+        });
+        console.log("✅ DB 저장 요청 완료");
+      } catch (e) {
+        console.warn("완료 상태 저장 실패", e);
+      }
+    });
+    // ------------------------------------------------------
 
     displayArea.appendChild(row);
   });
+
+  // 아무것도 안 그려졌으면 숨김
+  if (displayArea.children.length === 0) {
+    displayArea.style.display = "none";
+    return;
+  }
 
   const total = document.createElement("div");
   total.innerText = `총 골드: ${totalGold.toLocaleString()}G`;
   total.style.marginBottom = "8px";
   total.style.fontWeight = "bold";
+
   displayArea.prepend(total);
 }
 
@@ -188,7 +276,7 @@ async function initRaidUI(card, characterName) {
     savedData = [];
   }
 
-  renderRaidDisplay(displayArea, savedData);
+  renderRaidDisplay(displayArea, savedData, characterName);
 
   const editBtn = document.createElement("button");
   editBtn.innerText = "편집";
@@ -297,14 +385,16 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
     if (existing && existing.gold) goldCheck.checked = true;
 
     goldCheck.addEventListener("change", () => {
-      if (goldCheck.checked) {
-        if (goldCount >= 3) {
-          alert("골드 3개 제한");
-          goldCheck.checked = false;
-          return;
-        }
-        goldCount++;
-      } else goldCount--;
+      const currentGoldCount = result.filter(r => {
+        const data = r.getData();
+        return data.gold && data.level !== null;
+      }).length;
+
+      if (goldCheck.checked && currentGoldCount > 3) {
+        alert("골드 3개 제한");
+        goldCheck.checked = false;
+        return;
+      }
     });
 
     const busInput = document.createElement("input");
@@ -317,7 +407,7 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
 
     busInput.addEventListener("input", () => {
       busFee = Number(busInput.value) || 0;
-      renderRaidDisplay(displayArea, result.map(r => r.getData()));
+      renderRaidDisplay(displayArea, result.map(r => r.getData()), characterName);
     });
 
     checkWrap.append("G ", goldCheck, busInput);
@@ -340,9 +430,8 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
   saveBtn.style.marginTop = "10px";
   saveBtn.addEventListener("click", async () => {
     const finalData = result.map(r => r.getData())
-      .filter(r => r.level !== null || r.busFee > 0);
 
-    renderRaidDisplay(displayArea, finalData);
+    renderRaidDisplay(displayArea, finalData, characterName);
 
     await fetch("/api/raid/save", {
       method: "POST",
