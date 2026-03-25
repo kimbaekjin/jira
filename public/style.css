@@ -138,3 +138,48 @@ body {
   max-width: 900px;
   margin: 0 auto;
 }
+
+.heart-badge {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  background: #ff6b81;
+  transform: rotate(45deg);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  font-size: 60px;
+  font-weight: 600;
+  color: white;
+}
+
+/* 하트 위쪽 두 원 */
+.heart-badge::before,
+.heart-badge::after {
+  content: "";
+  width: 80px;
+  height: 80px;
+  position: absolute;
+  background: #ff6b81;
+  border-radius: 50%;
+}
+
+.heart-badge::before {
+  left: -50%;
+}
+
+.heart-badge::after {
+  top: -50%;
+}
+
+/* 🔥 텍스트 다시 정상 각도로 */
+.heart-badge {
+  transform: rotate(45deg);
+}
+
+.heart-badge > * {
+  transform: rotate(-45deg);
+}

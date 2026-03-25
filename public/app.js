@@ -92,24 +92,51 @@ function renderRaidDisplay(displayArea, data) {
   displayArea.style.display = "block";
 
   const colors = {
-    "노말": "#3498db", "하드": "#e74c3c", "나메": "#7f8c8d",
+    "노말": "#fff5e6", "하드": "#fff176", "나메": "#f1f1f1",
     "1단계": "#3498db", "2단계": "#3498db", "3단계": "#3498db"
   };
 
   let totalGold = 0;
 
   data.forEach(r => {
-    const row = document.createElement("div");
-    row.style.marginBottom = "5px";
+        const row = document.createElement("div");
+        const heartWrap = document.createElement("div");
+        heartWrap.style.width = "150px";
+        heartWrap.style.height = "150px";
+        heartWrap.style.position = "relative";
+        heartWrap.style.marginRight = "8px";
 
-    const badge = document.createElement("span");
-    badge.innerText = r.level ? `${r.raid} ${r.level}` : r.raid;
-    badge.style.background = r.level ? colors[r.level] : "#888";
-    badge.style.color = "#fff";
-    badge.style.padding = "3px 6px";
-    badge.style.borderRadius = "6px";
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.marginBottom = "10px";
+        row.style.minHeight = "60px";
 
-    row.appendChild(badge);
+        // ❤️ 하트 badge
+        const heart = document.createElement("div");
+        heart.className = "heart-badge";
+        heart.style.position = "absolute";
+        heart.style.top = "50%";
+        heart.style.left = "50%";
+        heart.style.transform = "translate(-50%, -50%) rotate(45deg)";
+
+        // 텍스트 (회전 보정용 span)
+        const text = document.createElement("span");
+        text.style.position = "relative";
+        text.style.zIndex = "1";
+        text.style.fontWeight = "700";
+        text.style.transform = "rotate(-45deg)";
+        text.style.fontSize = "20px";
+        text.style.textAlign = "center";
+        text.innerText = r.level ? `${r.raid} ${r.level}` : r.raid;
+
+        // 난이도 색 (원하면 텍스트 색만 적용)
+        const baseColor = colors[r.level] || "#fff";
+        text.style.color = baseColor;
+
+        // 조립
+        heart.appendChild(text);
+        heartWrap.appendChild(heart);
+        row.appendChild(heartWrap);
 
     if (r.gold) {
       const goldValue = raidGoldTable[r.raid]?.[r.level] || 0;
@@ -203,9 +230,13 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
   raids.forEach(raid => {
     const row = document.createElement("div");
     row.style.display = "flex";
-    row.style.justifyContent = "space-between";
     row.style.alignItems = "center";
-    row.style.marginBottom = "10px";
+    row.style.justifyContent = "space-between";
+    row.style.padding = "6px 10px";
+    row.style.marginBottom = "6px";
+    row.style.borderRadius = "10px";
+    row.style.background = "rgba(255,255,255,0.6)";
+    row.style.boxShadow = "0 2px 6px rgba(0,0,0,0.05)";
 
     const name = document.createElement("div");
     name.innerText = raid.name;
@@ -345,7 +376,11 @@ function initHomeworkUI(name, card, homeworkData) {
     const taskName = taskEl.dataset.task;
     const checkbox = taskEl.querySelector(".hw-checkbox");
 
+    // 할의모래시계 특별 처리
     if (taskName === "할의모래시계") {
+    const gaugeWrapper = taskEl.querySelector(".hw-gauge");
+    if (gaugeWrapper) gaugeWrapper.style.display = "none"; // 🔥 게이지 숨김
+
       const taskData = homeworkData.find(h => h.task_name === taskName);
       if (checkbox && taskData && taskData.checked) checkbox.checked = true;
 
@@ -363,21 +398,30 @@ function initHomeworkUI(name, card, homeworkData) {
 
     const gaugeFill = taskEl.querySelector(".hw-gauge-fill");
     const taskData = homeworkData.find(h => h.task_name === taskName);
-    let gauge = taskData ? taskData.gauge : MAX_GAUGE;
 
+    // 숙제별 최대값과 단위
+    let maxGauge = MAX_GAUGE;
+    let step = 20;
+    if (taskName === "가디언토벌") { maxGauge = 100; step = 10; }
+
+    let gauge = taskData ? taskData.gauge : maxGauge;
+
+    // 체크박스 초기 상태
     if (checkbox && taskData && taskData.checked) checkbox.checked = true;
 
     if (gaugeFill) {
-      gaugeFill.style.width = `${(gauge / MAX_GAUGE) * 100}%`;
-      gaugeFill.innerText = `${gauge} / ${MAX_GAUGE}`;
+      gaugeFill.style.width = `${(gauge / maxGauge) * 100}%`;
+      gaugeFill.innerText = `${gauge} / ${maxGauge}`;
     }
 
+    // 숫자 입력창
     const input = document.createElement("input");
     input.type = "number";
-    input.min = 0; input.max = MAX_GAUGE; input.value = gauge;
+    input.min = 0; input.max = maxGauge; input.value = gauge;
     input.style.width = "50px"; input.style.marginLeft = "10px"; input.style.display = "none";
     taskEl.querySelector("label").appendChild(input);
 
+    // 버튼 생성
     const btn = document.createElement("button");
     btn.innerText = "게이지 수정"; btn.style.marginLeft = "10px"; btn.style.fontSize = "12px";
     taskEl.querySelector("label").appendChild(btn);
@@ -387,13 +431,24 @@ function initHomeworkUI(name, card, homeworkData) {
       if (input.style.display !== "none") input.focus();
     });
 
+    // 숫자 입력 이벤트
     input.addEventListener("blur", async () => {
       let val = parseInt(input.value);
       if (isNaN(val)) val = gauge;
-      if (val < 0 || val > MAX_GAUGE || (val !== 0 && val % 20 !== 0)) { input.value = gauge; return; }
+
+      // step 단위 적용
+      if (val < 0 || val > maxGauge || (val % step !== 0)) {
+        input.value = gauge;
+        return;
+      }
+
       gauge = val;
-      if (gaugeFill) { gaugeFill.style.width = `${(gauge / MAX_GAUGE) * 100}%`; gaugeFill.innerText = `${gauge} / ${MAX_GAUGE}`; }
+      if (gaugeFill) {
+        gaugeFill.style.width = `${(gauge / maxGauge) * 100}%`;
+        gaugeFill.innerText = `${gauge} / ${maxGauge}`;
+      }
       if (checkbox) checkbox.checked = gauge > 0;
+
       await fetch(`/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -401,12 +456,21 @@ function initHomeworkUI(name, card, homeworkData) {
       });
     });
 
+    // 체크박스 이벤트 (step 단위 증감)
     if (checkbox) {
       checkbox.addEventListener("change", async () => {
-        if (checkbox.checked && gauge >= 40) gauge -= 40;
-        else if (!checkbox.checked && gauge >= 40) { gauge += 40; if (gauge > MAX_GAUGE) gauge = MAX_GAUGE; }
+        if (checkbox.checked && gauge >= step) gauge -= step;
+        else if (!checkbox.checked && gauge >= step) {
+          gauge += step;
+          if (gauge > maxGauge) gauge = maxGauge;
+        }
+
         if (input) input.value = gauge;
-        if (gaugeFill) { gaugeFill.style.width = `${(gauge / MAX_GAUGE) * 100}%`; gaugeFill.innerText = `${gauge} / ${MAX_GAUGE}`; }
+        if (gaugeFill) {
+          gaugeFill.style.width = `${(gauge / maxGauge) * 100}%`;
+          gaugeFill.innerText = `${gauge} / ${maxGauge}`;
+        }
+
         await fetch(`/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
