@@ -288,18 +288,65 @@ async function initRaidUI(card, characterName) {
   });
 }
 
-// 레이드 편집 팝업
 function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
+  // -------------------- 오버레이 --------------------
+  const overlay = document.createElement("div");
+  overlay.style.cssText = `
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(3px);
+    z-index: 9998;
+  `;
+  document.body.appendChild(overlay);
+
+  // -------------------- 팝업 박스 --------------------
   const popup = document.createElement("div");
   popup.style.cssText = `
-    position:fixed; left:50%; top:50%;
-    transform:translate(-50%,-50%);
-    background:#fff; padding:20px;
-    border-radius:12px; z-index:9999;
-    width:400px; max-height:80%; overflow:auto;
+    position: fixed; left:50%; top:50%;
+    transform: translate(-50%,-50%) scale(0.8);
+    background: linear-gradient(145deg, #fff0f5, #ffe4ec);
+    padding: 25px 20px; border-radius:16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width:420px; max-height:80%; overflow-y:auto;
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+    opacity: 0; z-index:9999;
   `;
-  popup.innerHTML = `<h3>레이드 선택</h3>`;
+  document.body.appendChild(popup);
 
+  // 등장 애니메이션
+  requestAnimationFrame(() => {
+    popup.style.transform = "translate(-50%,-50%) scale(1)";
+    popup.style.opacity = "1";
+  });
+
+  // -------------------- 타이틀 --------------------
+  const title = document.createElement("h3");
+  title.innerText = "레이드 선택";
+  title.style.cssText = `
+    margin-top:0; margin-bottom:15px;
+    font-family:Pretendard, sans-serif;
+    font-weight:700; color:#ff6f91; text-align:center;
+  `;
+  popup.appendChild(title);
+
+  // -------------------- 닫기 버튼 --------------------
+  const closeBtn = document.createElement("button");
+  closeBtn.innerText = "✕";
+  closeBtn.style.cssText = `
+    position:absolute; top:10px; right:10px;
+    background:none; border:none;
+    font-size:18px; cursor:pointer; color:#ff6f91;
+    transition: transform 0.2s;
+  `;
+  closeBtn.addEventListener("mouseenter", () => closeBtn.style.transform = "scale(1.2)");
+  closeBtn.addEventListener("mouseleave", () => closeBtn.style.transform = "scale(1)");
+  closeBtn.addEventListener("click", () => {
+    overlay.remove();
+    popup.remove();
+  });
+  popup.appendChild(closeBtn);
+
+  // -------------------- 기존 레이드 UI 생성 --------------------
   const raids = [
     { name: "4막", levels: ["노말", "하드"] },
     { name: "종막", levels: ["노말", "하드"] },
@@ -325,10 +372,13 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
     row.style.borderRadius = "10px";
     row.style.background = "rgba(255,255,255,0.6)";
     row.style.boxShadow = "0 2px 6px rgba(0,0,0,0.05)";
+    row.style.transition = "background 0.2s, transform 0.2s";
+    row.addEventListener("mouseenter", () => row.style.background = "rgba(255,200,220,0.3)");
+    row.addEventListener("mouseleave", () => row.style.background = "rgba(255,255,255,0.6)");
 
-    const name = document.createElement("div");
-    name.innerText = raid.name;
-    name.style.width = "60px";
+    const nameDiv = document.createElement("div");
+    nameDiv.innerText = raid.name;
+    nameDiv.style.width = "60px";
 
     const levelWrap = document.createElement("div");
     levelWrap.style.display = "flex";
@@ -344,6 +394,7 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
         padding:5px; border:1px solid #ccc;
         border-radius:6px; margin-right:5px;
         cursor:pointer; font-size:12px;
+        transition: background 0.2s, color 0.2s;
       `;
       if (existing && existing.level === lv) {
         btn.style.background = colors[lv];
@@ -411,28 +462,42 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
     });
 
     checkWrap.append("G ", goldCheck, busInput);
-    row.append(name, levelWrap, checkWrap);
+    row.append(nameDiv, levelWrap, checkWrap);
     popup.appendChild(row);
 
-result.push({
-  raid: raid.name,
-  completed: existing?.completed || false,  // 기존 DB 값 포함
-  getData: () => ({
-    raid: raid.name,
-    level: selectedLevel,
-    gold: goldCheck.checked,
-    busFee: busFee,
-    completed: result.find(r => r.raid === raid.name)?.completed || false
-  })
-});
+    result.push({
+      raid: raid.name,
+      completed: existing?.completed || false,
+      getData: () => ({
+        raid: raid.name,
+        level: selectedLevel,
+        gold: goldCheck.checked,
+        busFee: busFee,
+        completed: result.find(r => r.raid === raid.name)?.completed || false
+      })
+    });
   });
 
+  // -------------------- 저장 버튼 --------------------
   const saveBtn = document.createElement("button");
   saveBtn.innerText = "저장";
-  saveBtn.style.marginTop = "10px";
+  saveBtn.style.cssText = `
+    margin-top:15px; width:100%;
+    padding:10px 0; border:none; border-radius:10px;
+    background:#ff6f91; color:#fff; font-weight:700;
+    font-size:14px; cursor:pointer;
+    transition: background 0.2s, transform 0.2s;
+  `;
+  saveBtn.addEventListener("mouseenter", () => {
+    saveBtn.style.background = "#ff4c70";
+    saveBtn.style.transform = "scale(1.02)";
+  });
+  saveBtn.addEventListener("mouseleave", () => {
+    saveBtn.style.background = "#ff6f91";
+    saveBtn.style.transform = "scale(1)";
+  });
   saveBtn.addEventListener("click", async () => {
-    const finalData = result.map(r => r.getData())
-
+    const finalData = result.map(r => r.getData());
     renderRaidDisplay(displayArea, finalData, characterName);
 
     await fetch("/api/raid/save", {
@@ -453,11 +518,11 @@ result.push({
 
     savedData.length = 0;
     savedData.push(...finalData);
+
+    overlay.remove();
     popup.remove();
   });
-
   popup.appendChild(saveBtn);
-  document.body.appendChild(popup);
 }
 
 // 숙제 UI 초기화
