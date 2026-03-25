@@ -211,8 +211,8 @@ function renderRaidDisplay(displayArea, data, characterName) {
     heart.addEventListener("click", async () => {
       completed = !completed;
 
-      const target = data.find(x => x.raid === r.raid);
-      if (target) target.completed = completed;
+        const target = data.find(d => d.raid === r.raid);
+        if (target) target.completed = completed;
 
       updateCompletedStyle();
 
@@ -222,13 +222,13 @@ function renderRaidDisplay(displayArea, data, characterName) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             character: characterName,
-            raids: data.map(x => ({
-              raid: x.raid,
-              level: x.level,
-              gold: x.gold || false,
-              selected: true,
-              busFee: Number(x.busFee) || 0,
-              completed: x.completed || false
+              raids: data.map(x => ({
+                raid: x.raid,
+                level: x.level,
+                gold: x.gold || false,
+                selected: true,
+                busFee: Number(x.busFee) || 0,
+                completed: x.completed !== undefined ? x.completed : false
             }))
           })
         });
@@ -414,15 +414,17 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
     row.append(name, levelWrap, checkWrap);
     popup.appendChild(row);
 
-    result.push({
-      raid: raid.name,
-      getData: () => ({
-        raid: raid.name,
-        level: selectedLevel,
-        gold: goldCheck.checked,
-        busFee: busFee
-      })
-    });
+result.push({
+  raid: raid.name,
+  completed: existing?.completed || false,  // 기존 DB 값 포함
+  getData: () => ({
+    raid: raid.name,
+    level: selectedLevel,
+    gold: goldCheck.checked,
+    busFee: busFee,
+    completed: result.find(r => r.raid === raid.name)?.completed || false
+  })
+});
   });
 
   const saveBtn = document.createElement("button");
@@ -443,7 +445,8 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
           level: r.level,
           gold: r.gold || false,
           selected: true,
-          busFee: Number(r.busFee) || 0
+          busFee: Number(r.busFee) || 0,
+          completed: r.completed || false
         }))
       })
     });
