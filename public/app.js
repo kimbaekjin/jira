@@ -590,33 +590,23 @@ function openRaidEditPopup(card, displayArea, characterName, savedData = []) {
 }
 
 // 숙제 UI 초기화
-// ================== initHomeworkUI ==================
-/**
- * 숙제 UI 초기화
- * 체크박스 클릭 시 즉시 게이지 감소/DB 저장/UI 반영
- * @param {string} name 캐릭터 이름
- * @param {HTMLElement} card 캐릭터 카드 DOM
- * @param {Array} homeworkData [{task_name, checked, gauge}, ...]
- */
 function initHomeworkUI(name, card, homeworkData) {
   const hwTasks = card.querySelectorAll(".hw-task");
 
   hwTasks.forEach(taskEl => {
     const taskName = taskEl.dataset.task;
     const checkbox = taskEl.querySelector(".hw-checkbox");
-    const gaugeFill = taskEl.querySelector(".hw-gauge-fill");
 
     // 할의모래시계 특별 처리
     if (taskName === "할의모래시계") {
-      const gaugeWrapper = taskEl.querySelector(".hw-gauge");
-      if (gaugeWrapper) gaugeWrapper.style.display = "none"; // 🔥 게이지 숨김
+    const gaugeWrapper = taskEl.querySelector(".hw-gauge");
+    if (gaugeWrapper) gaugeWrapper.style.display = "none"; // 🔥 게이지 숨김
 
       const taskData = homeworkData.find(h => h.task_name === taskName);
       if (checkbox && taskData && taskData.checked) checkbox.checked = true;
 
       if (checkbox) {
         checkbox.addEventListener("change", async () => {
-          // 체크 상태만 DB 저장
           await fetch(`/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -627,9 +617,12 @@ function initHomeworkUI(name, card, homeworkData) {
       return;
     }
 
-    // 일반 숙제 처리
+    const gaugeFill = taskEl.querySelector(".hw-gauge-fill");
     const taskData = homeworkData.find(h => h.task_name === taskName);
-    let maxGauge = 200, step = 20;
+
+    // 숙제별 최대값과 단위
+    let maxGauge = MAX_GAUGE;
+    let step = 20;
     if (taskName === "가디언토벌") { maxGauge = 100; step = 10; }
 
     let gauge = taskData ? taskData.gauge : maxGauge;
@@ -637,26 +630,21 @@ function initHomeworkUI(name, card, homeworkData) {
     // 체크박스 초기 상태
     if (checkbox && taskData && taskData.checked) checkbox.checked = true;
 
-    // 게이지 UI 초기화
     if (gaugeFill) {
       gaugeFill.style.width = `${(gauge / maxGauge) * 100}%`;
       gaugeFill.innerText = `${gauge} / ${maxGauge}`;
     }
 
-    // 숫자 입력창 생성 (수정용)
+    // 숫자 입력창
     const input = document.createElement("input");
     input.type = "number";
-    input.min = 0; input.max = maxGauge;
-    input.value = gauge;
-    input.style.width = "50px";
-    input.style.marginLeft = "10px";
-    input.style.display = "none";
+    input.min = 0; input.max = maxGauge; input.value = gauge;
+    input.style.width = "50px"; input.style.marginLeft = "10px"; input.style.display = "none";
     taskEl.querySelector("label").appendChild(input);
 
-    // 수정 버튼
+    // 버튼 생성
     const btn = document.createElement("button");
-    btn.innerText = "게이지 수정";
-    btn.style.marginLeft = "10px"; btn.style.fontSize = "12px";
+    btn.innerText = "게이지 수정"; btn.style.marginLeft = "10px"; btn.style.fontSize = "12px";
     taskEl.querySelector("label").appendChild(btn);
 
     btn.addEventListener("click", () => {
@@ -682,31 +670,28 @@ function initHomeworkUI(name, card, homeworkData) {
       }
       if (checkbox) checkbox.checked = gauge > 0;
 
-      // DB 저장
       await fetch(`/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ checked: checkbox.checked, gauge })
+        body: JSON.stringify({ checked: gauge > 0, gauge })
       });
     });
 
-    // 체크박스 이벤트: 체크 시 즉시 게이지 감소
+    // 체크박스 이벤트 (step 단위 증감)
     if (checkbox) {
       checkbox.addEventListener("change", async () => {
-        if (checkbox.checked) {
-          // 체크하면 즉시 감소
-          gauge = Math.max(0, gauge - step);
+        if (checkbox.checked && gauge >= step) gauge -= step;
+        else if (!checkbox.checked && gauge >= step) {
+          gauge += step;
+          if (gauge > maxGauge) gauge = maxGauge;
         }
-        taskData.gauge = gauge;
-        taskData.checked = checkbox.checked;
 
-        // UI 업데이트
+        if (input) input.value = gauge;
         if (gaugeFill) {
           gaugeFill.style.width = `${(gauge / maxGauge) * 100}%`;
           gaugeFill.innerText = `${gauge} / ${maxGauge}`;
         }
 
-        // DB 저장
         await fetch(`/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -726,46 +711,28 @@ async function getCharacter(name) {
     return {};
   }
 }
-function renderHomeworkUI(homeworkData) {
-  homeworkData.forEach(task => {
-    const taskEl = document.querySelector(`.hw-task[data-task="${task.task_name}"]`);
-    if (!taskEl) return;
 
-    const checkbox = taskEl.querySelector(".hw-checkbox");
-    const gaugeFill = taskEl.querySelector(".hw-gauge-fill");
-
-    if (checkbox) checkbox.checked = !!task.checked;
-
-    if (gaugeFill) {
-      let maxGauge = MAX_GAUGE;
-      if (task.task_name === "가디언토벌") maxGauge = 100;
-      gaugeFill.style.width = `${(task.gauge || 0) / maxGauge * 100}%`;
-      gaugeFill.innerText = `${task.gauge || 0} / ${maxGauge}`;
-    }
-  });
-}
 // 초기화
 async function init() {
   const container = document.getElementById("container");
   for (const name of characterList) {
     const card = createCard();
     container.appendChild(card);
-
-    // 레이드 UI 초기화
     await initRaidUI(card, name);
 
-    // 캐릭터 기본 정보 불러오기
     const data = await getCharacter(name);
     card.querySelector(".char-img").src = data.CharacterImage || "/images/placeholder.png";
     card.querySelector(".name").innerText = data.CharacterName || name;
     card.querySelector(".level").innerText = `Lv. ${data.ItemAvgLevel || "-"}`;
     card.querySelector(".power").innerText = `전투력 ${data.CombatPower || "-"}`;
 
-    // 📌 DB 연동 일일 숙제 자동 갱신
-    let homeworkData = await autoUpdateDailyGaugesDB(name);
+    let homeworkData = [];
+    try {
+      const homeworkRes = await fetch(`/api/homework/${encodeURIComponent(name)}`);
+      homeworkData = await homeworkRes.json();
+      if (!Array.isArray(homeworkData)) homeworkData = [];
+    } catch { homeworkData = []; }
 
-    // 숙제 UI 렌더링
-    renderHomeworkUI(homeworkData);
     initHomeworkUI(name, card, homeworkData);
   }
 }

@@ -5,6 +5,7 @@ import cors from 'cors';
 import { Pool } from 'pg';
 import path from "path";
 import { fileURLToPath } from "url";
+import cron from "node-cron";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -178,6 +179,57 @@ app.post("/api/homework/:character/:task", async (req, res) => {
   } catch (err) {
     console.error("HOMEWORK SAVE ERROR:", err);
     res.status(500).json({ error: "DB 업데이트 실패" });
+  }
+});
+
+// 매일 오전 6시
+cron.schedule("* * * * *", async () => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT character_name, task_name, gauge, checked
+       FROM character_homework
+       WHERE date = CURRENT_DATE`
+    );
+
+    for (const row of rows) {
+      let increment = 0;
+      let maxGauge = 100;
+
+      if (row.task_name === "쿠르잔전선") maxGauge = 200;
+      else if (row.task_name === "가디언토벌") maxGauge = 100;
+      // 모래시계는 건너뜀
+
+      if (!row.checked) {
+        // 🔹 체크 안 된 경우: 게이지 회복
+        if (row.task_name === "쿠르잔전선") increment = 20;
+        else if (row.task_name === "가디언토벌") increment = 10;
+
+        if (increment > 0) {
+          const newGauge = Math.min(row.gauge + increment, maxGauge);
+          await pool.query(
+            `UPDATE character_homework
+             SET gauge = $1
+             WHERE character_name = $2 AND task_name = $3 AND date = CURRENT_DATE`,
+            [newGauge, row.character_name, row.task_name]
+          );
+
+          console.log(`[Cron 6AM] ${row.character_name} - ${row.task_name} 회복 +${increment}`);
+        }
+      } else {
+        // 🔹 체크 되어 있는 경우: 게이지 그대로, 체크 해제만
+        await pool.query(
+          `UPDATE character_homework
+           SET checked = false
+           WHERE character_name = $1 AND task_name = $2 AND date = CURRENT_DATE`,
+          [row.character_name, row.task_name]
+        );
+        console.log(`[Cron 6AM] ${row.character_name} - ${row.task_name} 체크 해제`);
+      }
+    }
+
+    console.log("[Cron 6AM] 숙제 갱신 완료");
+  } catch (err) {
+    console.error("[Cron 6AM] 숙제 처리 오류:", err);
   }
 });
 
