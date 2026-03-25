@@ -183,7 +183,7 @@ app.post("/api/homework/:character/:task", async (req, res) => {
 });
 
 // 매일 오전 6시
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 6 * * *", async () => {
   try {
     const { rows } = await pool.query(
       `SELECT character_name, task_name, gauge, checked
