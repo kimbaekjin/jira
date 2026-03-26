@@ -183,7 +183,8 @@ app.post("/api/homework/:character/:task", async (req, res) => {
 });
 
 // 매일 오전 6시
-cron.schedule("0 6 * * *", async () => {
+// server.js
+app.post("/api/homework/cron-trigger", async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT character_name, task_name, gauge, checked
@@ -197,10 +198,9 @@ cron.schedule("0 6 * * *", async () => {
 
       if (row.task_name === "쿠르잔전선") maxGauge = 200;
       else if (row.task_name === "가디언토벌") maxGauge = 100;
-      // 모래시계는 건너뜀
 
       if (!row.checked) {
-        // 🔹 체크 안 된 경우: 게이지 회복
+        // 체크 안 된 숙제: 게이지 회복
         if (row.task_name === "쿠르잔전선") increment = 20;
         else if (row.task_name === "가디언토벌") increment = 10;
 
@@ -212,24 +212,25 @@ cron.schedule("0 6 * * *", async () => {
              WHERE character_name = $2 AND task_name = $3 AND date = CURRENT_DATE`,
             [newGauge, row.character_name, row.task_name]
           );
-
-          console.log(`[Cron 6AM] ${row.character_name} - ${row.task_name} 회복 +${increment}`);
+          console.log(`[Cron API] ${row.character_name} - ${row.task_name} 회복 +${increment}`);
         }
       } else {
-        // 🔹 체크 되어 있는 경우: 게이지 그대로, 체크 해제만
+        // 체크 되어 있는 숙제: 체크 해제
         await pool.query(
           `UPDATE character_homework
            SET checked = false
            WHERE character_name = $1 AND task_name = $2 AND date = CURRENT_DATE`,
           [row.character_name, row.task_name]
         );
-        console.log(`[Cron 6AM] ${row.character_name} - ${row.task_name} 체크 해제`);
+        console.log(`[Cron API] ${row.character_name} - ${row.task_name} 체크 해제`);
       }
     }
 
-    console.log("[Cron 6AM] 숙제 갱신 완료");
+    console.log("[Cron API] 숙제 갱신 완료");
+    res.json({ success: true });
   } catch (err) {
-    console.error("[Cron 6AM] 숙제 처리 오류:", err);
+    console.error("[Cron API] 숙제 처리 오류:", err);
+    res.status(500).json({ error: "숙제 자동 처리 실패" });
   }
 });
 
