@@ -29,9 +29,43 @@ app.get("/", (req, res) => {
 // ================= 캐릭터 API =================
 const API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDAwMjgzMzcifQ.DyyRxqMKmeWLtf_zJWNkMabxMBbdqa5YZorrfgA1nXOwyvzuBi-fHzfLO91JIDZLdalvoUVFq-egSAG3ylQlSiMVHA6bBxrlrjjR8-gbVHYP2r3QB0SPFU5kwvTLSsfczDJeVextkgWa_V7BYfIFHrL8rn5MG0xJINb6gbZSIOC9uDnoJ7l0tZ7eos-1qzf-M7Wpa_3V4OriI3jJszn7xuvyIxyFSGd2X5zaVCkRdLNRAxb6qCReX0glkUabYC99GjhgW2Ckz42AA2UhREF4NbAU9hRH7cXeytwoYq_GpaAOw0lrGL8I_T_f3tZqpEE5vpUNbFqcxMvTyr9G04Hh3A";
 
+// 🔥 로아 Armory 통합 API
+app.get("/api/armories/:name/:type", async (req, res) => {
+  const { name, type } = req.params;
+
+  try {
+    let endpoint = "";
+
+    // 🔥 type 매핑
+    if (type === "equipment") endpoint = "equipment";
+    if (type === "skills") endpoint = "combat-skills";
+    if (type === "gems") endpoint = "gems";
+    if (type === "ark") endpoint = "arkpassive";
+
+    // ❗ 잘못된 요청 방지
+    if (!endpoint) {
+      return res.status(400).json({ error: "잘못된 type" });
+    }
+
+    const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(name)}/${endpoint}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${API_KEY}`
+      },
+    });
+
+    const data = await response.json();
+    console.log(data)
+    res.json(data);
+  } catch (err) {
+    console.error("Armory API 에러:", err);
+    res.status(500).json({ error: "서버 에러" });
+  }
+});
+
 app.get("/character/:name", async (req, res) => {
   const name = encodeURIComponent(req.params.name);
-
   try {
     const response = await fetch(
       `https://developer-lostark.game.onstove.com/armories/characters/${name}/profiles`,
