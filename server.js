@@ -227,7 +227,7 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
     const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
     const hour = kst.getHours();
 
-    if (hour !== 6) {
+    if (hour !== 10) {
       console.log("[CRON] KST 기준 6시 아님 → 실행 안함");
       console.log(hour)
       return res.json({ skipped: "not_6am_kst" });
