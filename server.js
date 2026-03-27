@@ -227,21 +227,10 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
     const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
     const hour = kst.getHours();
 
-    if (hour !== 10) {
+    if (hour !== 6) {
       console.log("[CRON] KST 기준 6시 아님 → 실행 안함");
       console.log(hour)
       return res.json({ skipped: "not_6am_kst" });
-    }
-    const today = now.toISOString().slice(0, 10);
-
-    // 👉 2. 이미 오늘 실행했는지 체크
-    const { rows } = await pool.query(
-      `SELECT last_run_date FROM cron_log WHERE id = 1`
-    );
-
-    if (rows[0]?.last_run_date === today) {
-      console.log("[CRON] 오늘 이미 실행됨 → 스킵");
-      return res.json({ skipped: "already_ran" });
     }
 
     console.log("[CRON] 6시 실행 시작");
@@ -304,7 +293,6 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
       console.log("이미 실행됨 → 스킵");
       return;
     }
-
         console.log("[CRON] 완료");
 
         res.json({ success: true });
