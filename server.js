@@ -292,20 +292,28 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
       }
     }
 
-    // 👉 4. 실행 기록 저장
-    await pool.query(
-      `UPDATE cron_log SET last_run_date = $1 WHERE id = 1`,
+        // 👉 4. 실행 기록 저장
+        const result = await pool.query(
+      `UPDATE cron_log
+       SET last_run_date = $1
+       WHERE id = 1 AND last_run_date < $1`,
       [today]
     );
 
-    console.log("[CRON] 완료");
+    if (result.rowCount === 0) {
+      console.log("이미 실행됨 → 스킵");
+      return;
+    }
 
-    res.json({ success: true });
-  } catch (err) {
-    console.error("[CRON ERROR]", err);
-    res.status(500).json({ error: "cron 실패" });
-  }
-});
+        console.log("[CRON] 완료");
+
+        res.json({ success: true });
+      } catch (err) {
+        console.error("[CRON ERROR]", err);
+        res.status(500).json({ error: "cron 실패" });
+      }
+    });
+
 
 // ================= 로그 미들웨어 =================
 app.use((req, res, next) => {
