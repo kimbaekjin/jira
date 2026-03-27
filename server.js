@@ -218,15 +218,42 @@ app.post("/api/homework/:character/:task", async (req, res) => {
 
 // 매일 오전 6시
 // server.js
+// ================= HOMEWORK CRON =================
 app.post("/api/homework/cron-trigger", async (req, res) => {
   try {
+    const now = new Date();
+
+    // KST 기준 시간 변환
+    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const hour = kst.getHours();
+
+    if (hour !== 6) {
+      console.log("[CRON] KST 기준 6시 아님 → 실행 안함");
+      return res.json({ skipped: "not_6am_kst" });
+    }
+    console.log(hour)
+    const today = now.toISOString().slice(0, 10);
+
+    // 👉 2. 이미 오늘 실행했는지 체크
     const { rows } = await pool.query(
+      `SELECT last_run_date FROM cron_log WHERE id = 1`
+    );
+
+    if (rows[0]?.last_run_date === today) {
+      console.log("[CRON] 오늘 이미 실행됨 → 스킵");
+      return res.json({ skipped: "already_ran" });
+    }
+
+    console.log("[CRON] 6시 실행 시작");
+
+    // 👉 3. 기존 로직
+    const { rows: homeworkRows } = await pool.query(
       `SELECT character_name, task_name, gauge, checked
        FROM character_homework
        WHERE date = CURRENT_DATE`
     );
 
-    for (const row of rows) {
+    for (const row of homeworkRows) {
       let increment = 0;
       let maxGauge = 100;
 
@@ -234,37 +261,49 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
       else if (row.task_name === "가디언토벌") maxGauge = 100;
 
       if (!row.checked) {
-        // 체크 안 된 숙제: 게이지 회복
         if (row.task_name === "쿠르잔전선") increment = 20;
         else if (row.task_name === "가디언토벌") increment = 10;
 
         if (increment > 0) {
           const newGauge = Math.min(row.gauge + increment, maxGauge);
+
           await pool.query(
             `UPDATE character_homework
              SET gauge = $1
              WHERE character_name = $2 AND task_name = $3 AND date = CURRENT_DATE`,
             [newGauge, row.character_name, row.task_name]
           );
-          console.log(`[Cron API] ${row.character_name} - ${row.task_name} 회복 +${increment}`);
+
+          console.log(
+            `[CRON] ${row.character_name} - ${row.task_name} +${increment}`
+          );
         }
       } else {
-        // 체크 되어 있는 숙제: 체크 해제
         await pool.query(
           `UPDATE character_homework
            SET checked = false
            WHERE character_name = $1 AND task_name = $2 AND date = CURRENT_DATE`,
           [row.character_name, row.task_name]
         );
-        console.log(`[Cron API] ${row.character_name} - ${row.task_name} 체크 해제`);
+
+        console.log(
+          `[CRON] ${row.character_name} - ${row.task_name} 체크 해제`
+        );
       }
     }
 
-    console.log("[Cron API] 숙제 갱신 완료");
+    // 👉 4. 실행 기록 저장
+    await pool.query(
+      `UPDATE cron_log SET last_run_date = $1 WHERE id = 1`,
+      [today]
+    );
+
+    console.log("[CRON] 완료");
+
     res.json({ success: true });
   } catch (err) {
-    console.error("[Cron API] 숙제 처리 오류:", err);
-    res.status(500).json({ error: "숙제 자동 처리 실패" });
+    console.error("[CRON ERROR]", err);
+    res.status(500).json({ error: "cron 실패" });
   }
 });
 
