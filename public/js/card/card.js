@@ -1,5 +1,5 @@
 import { homeworkGroups, MAX_GAUGE } from "../data/data.js";
-import { openCharacterPopup } from "../ui/popup.js";
+import { openCharacterPopup } from "../ui/popup/popup.js";
 
 export function createCard(name) {
   const card = document.createElement("div");

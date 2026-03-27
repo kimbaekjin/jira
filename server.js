@@ -9,6 +9,11 @@ import cron from "node-cron";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const profileCache = new Map();
+const PROFILE_TTL = 60 * 1000; // 1분
+
+const armoryCache = new Map();
+const CACHE_TTL = 60 * 1000; // 1분
 
 const app = express();
 app.use(cors());
@@ -32,17 +37,26 @@ const API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA
 // 🔥 로아 Armory 통합 API
 app.get("/api/armories/:name/:type", async (req, res) => {
   const { name, type } = req.params;
+  const key = `${name}-${type}`;
+  const now = Date.now();
 
   try {
-    let endpoint = "";
+    // ✅ 캐시 확인
+    if (armoryCache.has(key)) {
+      const cached = armoryCache.get(key);
 
-    // 🔥 type 매핑
+      if (now - cached.time < CACHE_TTL) {
+        console.log("서버 캐시 HIT:", key);
+        return res.json(cached.data);
+      }
+    }
+
+    let endpoint = "";
     if (type === "equipment") endpoint = "equipment";
     if (type === "skills") endpoint = "combat-skills";
     if (type === "gems") endpoint = "gems";
     if (type === "ark") endpoint = "arkpassive";
 
-    // ❗ 잘못된 요청 방지
     if (!endpoint) {
       return res.status(400).json({ error: "잘못된 type" });
     }
@@ -56,7 +70,15 @@ app.get("/api/armories/:name/:type", async (req, res) => {
     });
 
     const data = await response.json();
-    console.log(data)
+
+    // ✅ 캐시에 저장
+    armoryCache.set(key, {
+      data,
+      time: now
+    });
+
+    console.log("API 호출:", key);
+
     res.json(data);
   } catch (err) {
     console.error("Armory API 에러:", err);
@@ -65,10 +87,25 @@ app.get("/api/armories/:name/:type", async (req, res) => {
 });
 
 app.get("/character/:name", async (req, res) => {
-  const name = encodeURIComponent(req.params.name);
+  const name = req.params.name;
+  const key = name;
+  const now = Date.now();
+
   try {
+    // ✅ 캐시 확인
+    if (profileCache.has(key)) {
+      const cached = profileCache.get(key);
+
+      if (now - cached.time < PROFILE_TTL) {
+        console.log("프로필 캐시 HIT:", key);
+        return res.json(cached.data);
+      }
+    }
+
+    const encoded = encodeURIComponent(name);
+
     const response = await fetch(
-      `https://developer-lostark.game.onstove.com/armories/characters/${name}/profiles`,
+      `https://developer-lostark.game.onstove.com/armories/characters/${encoded}/profiles`,
       {
         headers: {
           accept: "application/json",
@@ -80,15 +117,29 @@ app.get("/character/:name", async (req, res) => {
     const text = await response.text();
     if (!response.ok) return res.status(response.status).send(text);
 
-    res.json(JSON.parse(text));
+    const data = JSON.parse(text);
+
+    // ✅ 캐시에 저장
+    profileCache.set(key, {
+      data,
+      time: now
+    });
+
+    console.log("프로필 API 호출:", key);
+
+    res.json(data);
+
   } catch (err) {
     console.error(err);
-    res.json({
+
+    const fallback = {
       CharacterImage: "/images/placeholder.png",
-      CharacterName: decodeURIComponent(name),
+      CharacterName: name,
       ItemAvgLevel: 0,
       CombatPower: 0
-    });
+    };
+
+    res.json(fallback);
   }
 });
 
