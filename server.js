@@ -229,9 +229,9 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
 
     if (hour !== 6) {
       console.log("[CRON] KST 기준 6시 아님 → 실행 안함");
+      console.log(hour)
       return res.json({ skipped: "not_6am_kst" });
     }
-    console.log(hour)
     const today = now.toISOString().slice(0, 10);
 
     // 👉 2. 이미 오늘 실행했는지 체크
