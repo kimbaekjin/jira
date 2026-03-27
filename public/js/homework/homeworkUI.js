@@ -2,12 +2,16 @@ import { MAX_GAUGE } from "../data/data.js";
 
 export async function autoUpdateDailyGaugesDB(characterName) {
   try {
-    const res = await fetch(`/api/homework/${encodeURIComponent(characterName)}`);
+    const res = await fetch(
+      `/api/homework/${encodeURIComponent(characterName)}`
+    );
+
     let homeworkData = await res.json();
     if (!Array.isArray(homeworkData)) homeworkData = [];
 
     const lastUpdateKey = `dailyGaugesLastUpdate_${characterName}`;
     const lastUpdate = localStorage.getItem(lastUpdateKey) || "";
+
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
     const isAfter6AM = now.getHours() >= 6;
@@ -26,6 +30,7 @@ export async function autoUpdateDailyGaugesDB(characterName) {
           if (task.gauge > 200) task.gauge = 200;
           updated = true;
         }
+
         if (task.task_name === "가디언토벌") {
           task.gauge = (task.gauge || 0) + 10;
           if (task.gauge > 100) task.gauge = 100;
@@ -73,7 +78,10 @@ export function initHomeworkUI(name, card, homeworkData) {
       const gaugeWrapper = taskEl.querySelector(".hw-gauge");
       if (gaugeWrapper) gaugeWrapper.style.display = "none";
 
-      const taskData = homeworkData.find(h => h.task_name === taskName);
+      const taskData = homeworkData.find(
+        h => h.task_name === taskName
+      );
+
       if (checkbox && taskData && taskData.checked) {
         checkbox.checked = true;
       }
@@ -93,12 +101,16 @@ export function initHomeworkUI(name, card, homeworkData) {
           );
         });
       }
+
       return;
     }
 
     // -------------------- 일반 숙제 --------------------
     const gaugeFill = taskEl.querySelector(".hw-gauge-fill");
-    const taskData = homeworkData.find(h => h.task_name === taskName);
+
+    const taskData = homeworkData.find(
+      h => h.task_name === taskName
+    );
 
     let maxGauge = MAX_GAUGE;
     let step = 20;
@@ -110,8 +122,8 @@ export function initHomeworkUI(name, card, homeworkData) {
 
     let gauge = taskData ? taskData.gauge : maxGauge;
 
-    if (checkbox && taskData && taskData.checked) {
-      checkbox.checked = true;
+    if (checkbox && taskData) {
+      checkbox.checked = !!taskData.checked;
     }
 
     if (gaugeFill) {
@@ -128,6 +140,7 @@ export function initHomeworkUI(name, card, homeworkData) {
     input.style.width = "50px";
     input.style.marginLeft = "10px";
     input.style.display = "none";
+
     taskEl.querySelector("label").appendChild(input);
 
     // -------------------- 버튼 --------------------
@@ -135,17 +148,20 @@ export function initHomeworkUI(name, card, homeworkData) {
     btn.innerText = "게이지 수정";
     btn.style.marginLeft = "10px";
     btn.style.fontSize = "12px";
+
     taskEl.querySelector("label").appendChild(btn);
 
     btn.addEventListener("click", () => {
       input.style.display =
         input.style.display === "none" ? "inline-block" : "none";
+
       if (input.style.display !== "none") input.focus();
     });
 
     // -------------------- 입력 처리 --------------------
     input.addEventListener("blur", async () => {
       let val = parseInt(input.value);
+
       if (isNaN(val)) val = gauge;
 
       if (val < 0 || val > maxGauge || val % step !== 0) {
@@ -160,22 +176,20 @@ export function initHomeworkUI(name, card, homeworkData) {
         gaugeFill.innerText = `${gauge} / ${maxGauge}`;
       }
 
-      if (checkbox) checkbox.checked = gauge > 0;
-
       await fetch(
         `/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            checked: gauge > 0,
+            checked: checkbox.checked,
             gauge
           })
         }
       );
     });
 
-    // -------------------- 체크박스 (🔥 복구된 핵심 로직) --------------------
+    // -------------------- 체크박스 --------------------
     if (checkbox) {
       checkbox.addEventListener("change", async () => {
         if (checkbox.checked && gauge >= step) {
