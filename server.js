@@ -283,11 +283,10 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
 
         // 👉 4. 실행 기록 저장
         const result = await pool.query(
-      `UPDATE cron_log
-       SET last_run_date = $1
-       WHERE id = 1 AND last_run_date < $1`,
-      [today]
-    );
+          `UPDATE cron_log
+           SET last_run_date = NOW()
+           WHERE id = 1 AND last_run_date < NOW()`
+        );
 
     if (result.rowCount === 0) {
       console.log("이미 실행됨 → 스킵");
