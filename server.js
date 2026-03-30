@@ -295,11 +295,6 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
               < (NOW() AT TIME ZONE 'Asia/Seoul')::date)
     `);
 
-    if (lock.rowCount === 0) {
-      console.log("[CRON] 이미 실행됨");
-      return res.json({ skipped: true });
-    }
-
     console.log("[CRON] 실행 시작");
 
     await pool.query("BEGIN");
