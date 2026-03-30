@@ -287,7 +287,7 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
       hour12: false
     });
 
-    if (parseInt(kstHour) !== 10) {
+    if (parseInt(kstHour) !== 6) {
       console.log("[CRON] 6시 아님 → 스킵");
       return res.json({ skipped: true });
     }
