@@ -1,5 +1,6 @@
 import { MAX_GAUGE } from "../data/data.js";
 
+// ❌ 기존 자동 증가 제거 → 조회 전용으로 변경
 export async function autoUpdateDailyGaugesDB(characterName) {
   try {
     const res = await fetch(
@@ -9,59 +10,11 @@ export async function autoUpdateDailyGaugesDB(characterName) {
     let homeworkData = await res.json();
     if (!Array.isArray(homeworkData)) homeworkData = [];
 
-    const lastUpdateKey = `dailyGaugesLastUpdate_${characterName}`;
-    const lastUpdate = localStorage.getItem(lastUpdateKey) || "";
-
-    const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
-    const isAfter6AM = now.getHours() >= 6;
-
-    // 이미 오늘 6시 이후 갱신했으면 패스
-    if (lastUpdate === todayStr && isAfter6AM) return homeworkData;
-
-    let updated = false;
-
-    for (const task of homeworkData) {
-      if (task.task_name === "할의모래시계") continue;
-
-      if (!task.checked) {
-        if (task.task_name === "쿠르잔전선") {
-          task.gauge = (task.gauge || 0) + 20;
-          if (task.gauge > 200) task.gauge = 200;
-          updated = true;
-        }
-
-        if (task.task_name === "가디언토벌") {
-          task.gauge = (task.gauge || 0) + 10;
-          if (task.gauge > 100) task.gauge = 100;
-          updated = true;
-        }
-      }
-    }
-
-    if (updated) {
-      for (const task of homeworkData) {
-        await fetch(
-          `/api/homework/${encodeURIComponent(characterName)}/${encodeURIComponent(task.task_name)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              checked: task.checked,
-              gauge: task.gauge || 0
-            })
-          }
-        );
-      }
-    }
-
-    if (isAfter6AM) {
-      localStorage.setItem(lastUpdateKey, todayStr);
-    }
-
+    // ✅ 이제 서버가 6시 처리하니까 아무것도 안함
     return homeworkData;
+
   } catch (e) {
-    console.error("DB 기반 일일 숙제 갱신 실패", e);
+    console.error("DB 기반 일일 숙제 불러오기 실패", e);
     return [];
   }
 }
@@ -82,8 +35,8 @@ export function initHomeworkUI(name, card, homeworkData) {
         h => h.task_name === taskName
       );
 
-      if (checkbox && taskData && taskData.checked) {
-        checkbox.checked = true;
+      if (checkbox && taskData) {
+        checkbox.checked = !!taskData.checked;
       }
 
       if (checkbox) {
