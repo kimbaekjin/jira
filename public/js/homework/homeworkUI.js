@@ -1,6 +1,5 @@
 import { MAX_GAUGE } from "../data/data.js";
 
-// ❌ 기존 자동 증가 제거 → 조회 전용으로 변경
 export async function autoUpdateDailyGaugesDB(characterName) {
   try {
     const res = await fetch(
@@ -145,9 +144,14 @@ export function initHomeworkUI(name, card, homeworkData) {
     // -------------------- 체크박스 --------------------
     if (checkbox) {
       checkbox.addEventListener("change", async () => {
-        if (checkbox.checked && gauge >= step) {
-          gauge -= step;
-        } else if (!checkbox.checked && gauge >= step) {
+      console.log("change 실행됨");
+        if (checkbox.checked) {
+          // 체크 → 감소
+          if (gauge >= step) {
+            gauge -= step;
+          }
+        } else {
+          // 체크 해제 → 증가 (🔥 여기 조건 제거)
           gauge += step;
           if (gauge > maxGauge) gauge = maxGauge;
         }
