@@ -50,12 +50,12 @@ app.get("/api/armories/:name/:type", async (req, res) => {
         return res.json(cached.data);
       }
     }
-
+    console.log(type)
     let endpoint = "";
     if (type === "equipment") endpoint = "equipment";
-    if (type === "skills") endpoint = "combat-skills";
+    if (type === "combat-skills") endpoint = "combat-skills";
     if (type === "gems") endpoint = "gems";
-    if (type === "ark") endpoint = "arkpassive";
+    if (type === "arkgrid") endpoint = "arkgrid";
 
     if (!endpoint) {
       return res.status(400).json({ error: "잘못된 type" });
@@ -365,7 +365,6 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
     res.status(500).json({ error: "cron 실패" });
   }
 });
-
 
 // ================= 로그 미들웨어 =================
 app.use((req, res, next) => {

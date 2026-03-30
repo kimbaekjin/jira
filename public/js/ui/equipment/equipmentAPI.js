@@ -14,7 +14,11 @@ export async function fetchEquipment(name) {
   const res = await fetch(`/api/armories/${name}/equipment`);
   const data = await res.json();
 
-  armoryCache.set(key, { data, time: now });
-  console.log(data[12])
-  return data;
+  const filtered = data.filter(item =>
+    !item.Name.includes("용사의 문장")
+  );
+
+  armoryCache.set(key, { data: filtered, time: now });
+
+  return filtered;
 }

@@ -12,25 +12,20 @@ export function parseEquipmentTooltip(item) {
     let accessoryStats = [];
     let stoneEngravings = [];
 
-    // ---------------------------
-    // 🔥 팔찌 파싱 (핵심 추가)
-    // ---------------------------
     if (type === "팔찌") {
-      const raw = tooltip?.Element_012?.value?.Element_001 || "";
+      const raw = tooltip?.Element_005?.value?.Element_001 || "";
 
-      const clean = raw
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]*>/g, "");
+      const { baseStats, effects } = parseBracelet(raw);
 
-      accessoryStats = clean
-        .split("\n")
-        .map(line => line.trim())
-        .filter(Boolean);
+      return {
+        name,
+        type,
+        icon,
+        baseStats,
+        effects
+      };
     }
 
-    // ---------------------------
-    // 🔥 기존 악세 파싱 (유지)
-    // ---------------------------
     else {
       const baseRaw = tooltip?.Element_004?.value?.Element_001 || "";
       const extraRaw = tooltip?.Element_006?.value?.Element_001 || "";
@@ -45,6 +40,7 @@ export function parseEquipmentTooltip(item) {
         const t = line.trim();
         if (t) accessoryStats.push(t);
       });
+
     }
 
     // ---------------------------
@@ -88,4 +84,48 @@ export function parseEquipmentTooltip(item) {
       stoneEngravings: []
     };
   }
+}
+
+function parseBracelet(raw) {
+  if (!raw) return { baseStats: [], effects: [] };
+
+  // 1. 옵션 기준 분리
+  const blocks = raw
+    .split(/<img[^>]*>/i) // img 기준 분리
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  const baseStats = [];
+  const effects = [];
+
+  const statKeywords = [
+    "힘", "민첩", "지능", "체력",
+    "특화", "신속", "치명", "제압", "인내", "최대 생명력"
+  ];
+
+  blocks.forEach(block => {
+    // 2. 태그 제거 + 줄 정리
+    const clean = block
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]*>/g, "")
+      .split("\n")
+      .map(v => v.trim())
+      .filter(Boolean);
+
+    if (clean.length === 0) return;
+
+    // 3. stat vs effect 분리 (첫 줄 기준)
+    const first = clean[0];
+
+    const isStat = statKeywords.some(stat =>
+      new RegExp(`^${stat}\\s*\\+\\s*\\d+$`).test(first)
+    );
+
+    const mergedLine = clean.join(" "); // 👉 한 줄로 합치기
+
+    if (isStat) baseStats.push(mergedLine);
+    else effects.push(mergedLine);
+  });
+
+  return { baseStats, effects };
 }

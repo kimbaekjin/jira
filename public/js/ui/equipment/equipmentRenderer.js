@@ -8,24 +8,27 @@ const OPTION_TABLE = {
     "낙인력 %": { high: 8.00, mid: 4.80, low: 2.15 },
     "세레나데, 신앙, 조화 게이지 획득량 %": { high: 6.00, mid: 3.60, low: 1.60 },
     "공격력 +": { high: 390, mid: 195, low: 80 },
+    "무기 공격력 +": { high: 960, mid: 480, low: 195 },
     "최대 생명력 +": { high: 6500, mid: 3250, low: 1300 },
     "최대 마나 +": { high: 30, mid: 15, low: 6 },
     "상태이상 공격 지속시간 %": { high: 1.00, mid: 0.50, low: 0.20 },
-    "전투 중 생명 회복략 +": { high: 50, mid: 25, low: 10 }
+    "전투 중 생명력 회복량 +": { high: 50, mid: 25, low: 10 }
   },
   귀걸이: {
     "공격력 %": { high: 1.55, mid: 0.95, low: 0.40 },
+    "파티원 보호막 효과 %": { high: 3.50, mid: 2.10, low: 0.95 },
+    "파티원 회복 효과 %": { high: 3.50, mid: 2.10, low: 0.95 },
     "무기 공격력 %": { high: 3.00, mid: 1.80, low: 0.80 },
     "무기 공격력 +": { high: 960, mid: 480, low: 195 },
     "공격력 +": { high: 390, mid: 195, low: 80 },
     "최대 생명력 +": { high: 6500, mid: 3250, low: 1300 },
     "최대 마나 +": { high: 30, mid: 15, low: 6 },
     "상태이상 공격 지속시간 %": { high: 1.00, mid: 0.50, low: 0.20 },
-    "전투 중 생명 회복략 +": { high: 50, mid: 25, low: 10 }
+    "전투 중 생명력 회복량 +": { high: 50, mid: 25, low: 10 }
   },
   반지: {
     "치명타 피해 %": { high: 4.00, mid: 2.40, low: 1.10 },
-    "아군 피해량 강화 효과%": { high: 7.50, mid: 4.50, low: 2.00 },
+    "아군 피해량 강화 효과 %": { high: 7.50, mid: 4.50, low: 2.00 },
     "아군 공격력 강화 효과 %": { high: 5.00, mid: 3.00, low: 1.35 },
     "치명타 적중률 %": { high: 1.55, mid: 0.95, low: 0.40 },
     "무기 공격력 +": { high: 960, mid: 480, low: 195 },
@@ -33,9 +36,48 @@ const OPTION_TABLE = {
     "최대 생명력 +": { high: 6500, mid: 3250, low: 1300 },
     "최대 마나 +": { high: 30, mid: 15, low: 6 },
     "상태이상 공격 지속시간 %": { high: 1.00, mid: 0.50, low: 0.20 },
-    "전투 중 생명 회복략 +": { high: 50, mid: 25, low: 10 }
-  }
+    "전투 중 생명력 회복량 +": { high: 50, mid: 25, low: 10 }
+  },
+    팔찌: {
+      "공격속도 %": {low: 4.0, mid: 5.0, high: 6.0},
+      "치명타 적중률 %": { low: 3.4, mid: 4.2, high: 5.0 },
+      "치명타 피해 %": { low: 6.8, mid: 8.4, high: 10.0 },
+
+      "적에게 주는 피해 %": { low: 2.0, mid: 2.5, high: 3.0 },
+      "무력화 상태의 적에게 주는 피해 %" : { low: 4.0, mid: 4.5, high: 5.0 },
+
+      "추가 피해 %": { low: 2.5, mid: 3.0, high: 3.5 },
+      "악마 및 대악마 계열 피해량 %": { low: 2.5, mid: 2.5, high: 2.5 },
+
+      "적추피 %": { low: 4.5, mid: 5.0, high: 5.5 },
+
+      "무기 공격력 +": { low: 7200, mid: 8100, high: 9000 },
+      "공격 및 이동속도 %": { low: 4.0, mid: 5.0, high: 6.0 },
+
+      "적에게 주는 피해 (조건부) %": { low: 4.5, mid: 5.0, high: 5.5 },
+
+      "백어택 스킬 피해 %": { low: 2.5, mid: 3.0, high: 3.5 },
+      "헤드어택 스킬 피해 %": { low: 2.5, mid: 3.0, high: 3.5 },
+      "비방향 스킬 피해 %": { low: 2.5, mid: 3.0, high: 3.5 },
+
+      // ===== 서포터 =====
+      "방어력 감소 %": { low: 1.8, mid: 2.1, high: 2.5 },
+      "치명타 저항력 감소 %": { low: 1.8, mid: 2.1, high: 2.5 },
+      "치명타 피해 저항력 감소 %": { low: 3.6, mid: 4.2, high: 4.8 },
+
+      "보호 효과 %": { low: 0.9, mid: 1.1, high: 1.3 },
+      "보호 및 회복 효과 %": { low: 2.5, mid: 3.0, high: 3.5 },
+
+      "아군 공격력 강화 효과 %": { low: 4.0, mid: 5.0, high: 6.0 },
+      "아군 피해량 강화 효과 %": { low: 6.0, mid: 7.5, high: 9.0 }
+    }
 };
+
+function normalizeForMatch(str) {
+  return str
+    .replace(/\s/g, "")
+    .toLowerCase();
+}
 
 function splitTooltipData(type, stats) {
   const baseStats = [];
@@ -61,13 +103,127 @@ function getColor(type, stat) {
   const table = OPTION_TABLE[type];
   if (!table) return "#ddd";
 
-  const match = stat.match(/(.+?)\s*\+([\d.]+)(%?)/);
-  if (!match) return "#ddd";
+  let name = stat;
+  let value = null;
 
-  let name = match[1].trim();
-  let value = parseFloat(match[2]);
+  // =========================
+  // 팔찌 처리
+  // =========================
+  if (type === "팔찌") {
 
-  const key = Object.keys(table).find(k => k.startsWith(name));
+    let percentMatch = null;
+    let flatMatch = stat.match(/무기공격력\s*([\d]+)/);
+
+    if (stat.includes("재사용 대기 시간")) {
+      const matches = [...stat.matchAll(/([\d.]+)%/g)];
+
+      if (matches.length >= 2) {
+        percentMatch = matches[1];
+      }
+    }
+
+    if (!percentMatch) {
+      percentMatch = stat.match(/([\d.]+)%/);
+    }
+
+    if (percentMatch) {
+      value = parseFloat(percentMatch[1]);
+    } else if (flatMatch) {
+      value = parseFloat(flatMatch[1]);
+    } else {
+      return "#868e96";
+    }
+
+    // =========================
+    // 이름 매핑
+    // =========================
+    if (stat.includes("치명타 적중률"))
+      name = "치명타 적중률 %";
+
+    else if (stat.includes("보호 효과"))
+      name = "보호 효과 %";
+
+    else if (stat.includes("치명타 피해") && stat.includes("저항"))
+      name = "치명타 피해 저항력 감소 %";
+
+    else if (stat.includes("재사용 대기"))
+      name = "적추피 %";
+
+    else if (stat.includes("치명타 피해"))
+      name = "치명타 피해 %";
+
+    else if (stat.includes("공격 및 이동"))
+      name = "공격 및 이동속도 %";
+
+    else if (stat.includes("치명타 저항"))
+      name = "치명타 저항력 감소 %";
+
+    else if (stat.includes("방어력"))
+      name = "방어력 감소 %";
+
+    else if (stat.includes("무력화"))
+      name = "무력화 상태의 적에게 주는 피해 %";
+
+    else if (stat.includes("추가 피해"))
+      name = "추가 피해 %";
+
+    else if (stat.includes("악마"))
+      name = "악마 및 대악마 계열 피해량 %";
+
+    else if (stat.includes("무기공격력"))
+      name = "무기 공격력 +";
+
+    else if (stat.includes("공격 및 이동속도"))
+      name = "공격 및 이동속도 %";
+
+    else if (stat.includes("백어택"))
+      name = "백어택 스킬 피해 %";
+
+    else if (stat.includes("헤드어택"))
+      name = "헤드어택 스킬 피해 %";
+
+    else if (stat.includes("방향성 공격이 아닌"))
+      name = "비방향 스킬 피해 %";
+
+    else if (stat.includes("아군 공격력"))
+      name = "아군 공격력 강화 효과 %";
+
+    else if (stat.includes("아군 피해량"))
+      name = "아군 피해량 강화 효과 %";
+
+    else if (stat.includes("적에게 주는 피해") && !stat.includes("무력화"))
+      name = "적에게 주는 피해 %";
+
+    else if (stat.includes("적에게 주는 피해") && stat.includes("조건"))
+      name = "적에게 주는 피해 (조건부) %";
+  }
+
+    else {
+      const percentMatch = stat.match(/(.+?)\s*\+?([\d.]+)\s*%/);
+      const plusMatch = stat.match(/(.+?)\s*\+\s*([\d.]+)/);
+
+      if (percentMatch) {
+        name = percentMatch[1].trim(); // 👈 + 제거
+        value = parseFloat(percentMatch[2]);
+
+        // key 포맷 통일
+        name = name + " %";
+      }
+      else if (plusMatch) {
+        name = plusMatch[1].trim();
+        value = parseFloat(plusMatch[2]);
+
+        name = name + " +";
+      }
+      else {
+        return "#ddd";
+      }
+    }
+    console.log("NAME:", name);
+    const key = Object.keys(table).find(k =>
+    normalizeForMatch(k) === normalizeForMatch(name)
+      );
+
   if (!key) return "#ddd";
 
   const opt = table[key];
@@ -77,6 +233,26 @@ function getColor(type, stat) {
   if (value >= opt.low) return "#339af0";
 
   return "#adb5bd";
+}
+
+function extractKey(stat) {
+  // % 여부
+  const isPercent = stat.includes("%");
+
+  // + 여부
+  const isFlat = /\+\d/.test(stat);
+
+  // 대표 이름 추출 (숫자 제거)
+  const name = stat
+    .replace(/\d+(\.\d+)?%?/g, "")
+    .replace(/\+?\d+/g, "")
+    .trim();
+
+  // 최종 key
+  if (isPercent) return `${name} %`;
+  if (isFlat) return `${name} +`;
+
+  return name;
 }
 
 export async function renderEquipment(name) {
@@ -129,8 +305,16 @@ export async function renderEquipment(name) {
 }
 
 function createItem(item) {
-  const { name, quality, type, icon, stoneEngravings = [], accessoryStats = [] } =
-    parseEquipmentTooltip(item);
+      const {
+      name,
+      quality,
+      type,
+      icon,
+      stoneEngravings = [],
+      accessoryStats = [],
+      baseStats = [],
+      effects = []
+    } = parseEquipmentTooltip(item);
 
   const row = document.createElement("div");
   row.style.display = "flex";
@@ -182,6 +366,12 @@ function createItem(item) {
     ["목걸이","귀걸이","반지","팔찌"].includes(type)
   ) {
     const tooltip = document.createElement("div");
+    document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    tooltip.style.display = "none";
+  }
+});
+
 
     tooltip.style.position = "fixed";
     tooltip.style.background = "#1e1e1e";
@@ -207,57 +397,38 @@ function createItem(item) {
     }
 
     // 팔찌
-    else if (type === "팔찌") {
-      const tooltipObj =
-        typeof item.Tooltip === "string"
-          ? JSON.parse(item.Tooltip)
-          : item.Tooltip;
+        else if (type === "팔찌") {
+          tooltip.innerHTML = `
+            <div style="margin-bottom:6px; font-weight:bold; color:#ffd43b;">
+              기본 능력치
+            </div>
 
-      const raw =
-        tooltipObj?.Element_005?.value?.Element_001 || "";
+            ${
+              baseStats.length > 0
+                ? baseStats.map(s => `<div style="color:#4dabf7">${s}</div>`).join("")
+                : `<div style="color:#868e96">없음</div>`
+            }
 
-      const clean = raw
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]*>/g, "");
+            <div style="margin-top:6px; margin-bottom:6px; font-weight:bold; color:#74c0fc;">
+              팔찌 효과
+            </div>
 
-      const lines = clean
-        .split("\n")
-        .map(l => l.trim())
-        .filter(Boolean);
+            ${
+                effects.map(s => {
+                  const color = getColor(type, s);
 
-      const baseStats = [];
-      const options = [];
+                  return `<div style="
+                    color:${color};
+                    margin-bottom:6px;
+                    line-height:1.5;
+                  ">
+                    ${formatBraceletEffect(s)}
+                  </div>`;
+                }).join("")
 
-      lines.forEach(line => {
-        if (
-          line.includes("힘") ||
-          line.includes("민") ||
-          line.includes("지능") ||
-          line.includes("체력") ||
-          line.includes("신속") ||
-          line.includes("치명") ||
-          line.includes("특화")
-        ) {
-          baseStats.push(line);
-        } else {
-          options.push(line);
+            }
+          `;
         }
-      });
-
-      tooltip.innerHTML = `
-        <div style="margin-bottom:6px; font-weight:bold; color:#ffd43b;">
-          기본 능력치
-        </div>
-
-        ${baseStats.map(s => `<div style="color:#4dabf7">${s}</div>`).join("")}
-
-        <div style="margin-top:6px; margin-bottom:6px; font-weight:bold; color:#74c0fc;">
-          팔찌 효과
-        </div>
-
-        ${options.map(s => `<div style="color:#ff922b">${s}</div>`).join("")}
-      `;
-    }
 
     // 악세
     else {
@@ -291,8 +462,32 @@ function createItem(item) {
     });
 
     row.addEventListener("mousemove", (e) => {
-      tooltip.style.left = e.clientX + 10 + "px";
-      tooltip.style.top = e.clientY + 10 + "px";
+      tooltip.style.display = "block";
+
+      const rect = tooltip.getBoundingClientRect();
+      const tooltipHeight = rect.height;
+      const tooltipWidth = rect.width;
+
+      let top = e.clientY + 12;
+      let left = e.clientX + 12;
+
+      // 🔽 아래 넘치면 위로
+      if (top + tooltipHeight > window.innerHeight) {
+        top = e.clientY - tooltipHeight - 12;
+      }
+
+      // 🔼 위로도 넘치면 그냥 0에 붙임
+      if (top < 0) {
+        top = 5;
+      }
+
+      // 👉 오른쪽 넘치면 왼쪽으로
+      if (left + tooltipWidth > window.innerWidth) {
+        left = e.clientX - tooltipWidth - 12;
+      }
+
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
     });
 
     row.addEventListener("mouseleave", () => {
@@ -308,4 +503,12 @@ function getQualityTextColor(q) {
   if (q >= 70) return "#4dabf7";
   if (q >= 40) return "#40c057";
   return "#ffd43b";
+}
+
+function formatBraceletEffect(text) {
+  return text
+    .replace(/(감소시킨다\.)/g, "$1<br>")
+    .replace(/(증가한다\.)/g, "$1<br>")
+    .replace(/(적용된다\.)/g, "$1<br>")
+    .replace(/(\.\s)/g, ".<br>");
 }
