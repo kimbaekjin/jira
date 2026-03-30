@@ -261,6 +261,13 @@ app.post("/api/homework/:character/:task", async (req, res) => {
     );
 
     res.json({ success: true });
+    console.log("[POST 요청]", {
+    character,
+    task,
+    checked,
+    gauge,
+    time: new Date()
+  });
   } catch (err) {
     console.error("HOMEWORK SAVE ERROR:", err);
     res.status(500).json({ error: "DB 업데이트 실패" });
@@ -344,6 +351,12 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
     await pool.query("COMMIT");
 
     console.log("[CRON] 완료");
+    console.log("[CRON UPDATE]", {
+      character: row.character_name,
+      task: row.task_name,
+      before: row.gauge,
+      after: newGauge
+    });
     res.json({ success: true });
 
   } catch (err) {

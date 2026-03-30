@@ -162,6 +162,11 @@ export function initHomeworkUI(name, card, homeworkData) {
           gaugeFill.style.width = `${(gauge / maxGauge) * 100}%`;
           gaugeFill.innerText = `${gauge} / ${maxGauge}`;
         }
+        console.log("체크 변경", {
+            taskName,
+            before: gauge,
+            checked: checkbox.checked
+          });
 
         await fetch(
           `/api/homework/${encodeURIComponent(name)}/${encodeURIComponent(taskName)}`,
