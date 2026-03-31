@@ -274,43 +274,28 @@ app.post("/api/homework/:character/:task", async (req, res) => {
   }
 });
 
-// 매일 오전 6시
 // server.js
 // ================= HOMEWORK CRON =================
 app.post("/api/homework/cron-trigger", async (req, res) => {
   try {
-    // 👉 1. KST 기준 현재 시간
-    const now = new Date();
-    const kstHour = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Seoul",
-      hour: "numeric",
-      hour12: false
-    });
-
-    if (parseInt(kstHour) !== 6) {
-      console.log("[CRON] 6시 아님 → 스킵");
-      return res.json({ skipped: true });
-    }
-
-    // 👉 2. 중복 실행 방지 (제일 중요)
-    const lock = await pool.query(`
-      UPDATE cron_log
-      SET last_run_date = NOW()
-      WHERE id = 1
-      AND (last_run_date IS NULL
-           OR (last_run_date AT TIME ZONE 'Asia/Seoul')::date
-              < (NOW() AT TIME ZONE 'Asia/Seoul')::date)
-    `);
-
-    console.log("[CRON] 실행 시작");
-
     await pool.query("BEGIN");
 
-    // 👉 3. 오늘 데이터 가져오기 (KST 기준)
+    const today = `(NOW() AT TIME ZONE 'Asia/Seoul')::date`;
+    const yesterday = `(NOW() AT TIME ZONE 'Asia/Seoul')::date - INTERVAL '1 day'`;
+
+    // ✅ 1. 3일 이전 데이터 삭제
+    await pool.query(`
+      DELETE FROM character_homework
+      WHERE date < ${today} - INTERVAL '2 days'
+    `);
+
+    console.log("[CRON] 오래된 데이터 삭제 완료");
+
+    // ✅ 2. 어제 데이터 가져오기
     const { rows } = await pool.query(`
       SELECT character_name, task_name, gauge, checked
       FROM character_homework
-      WHERE date = (NOW() AT TIME ZONE 'Asia/Seoul')::date
+      WHERE date = ${yesterday}
     `);
 
     for (const row of rows) {
@@ -323,45 +308,35 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
       if (!row.checked) {
         if (row.task_name === "쿠르잔전선") increment = 20;
         else if (row.task_name === "가디언토벌") increment = 10;
-
-        if (increment > 0) {
-          const newGauge = Math.min(row.gauge + increment, maxGauge);
-
-          await pool.query(
-            `UPDATE character_homework
-             SET gauge = $1
-             WHERE character_name = $2
-             AND task_name = $3
-             AND date = (NOW() AT TIME ZONE 'Asia/Seoul')::date`,
-            [newGauge, row.character_name, row.task_name]
-          );
-        }
-      } else {
-        await pool.query(
-          `UPDATE character_homework
-           SET checked = false
-           WHERE character_name = $1
-           AND task_name = $2
-           AND date = (NOW() AT TIME ZONE 'Asia/Seoul')::date`,
-          [row.character_name, row.task_name]
-        );
       }
+
+      let newGauge = row.gauge;
+      if (increment > 0) {
+        newGauge = Math.min(row.gauge + increment, maxGauge);
+      }
+
+      // ✅ 3. 오늘 데이터로 저장
+      await pool.query(
+        `
+        INSERT INTO character_homework
+        (character_name, task_name, date, checked, gauge)
+        VALUES ($1, $2, ${today}, $3, $4)
+        ON CONFLICT (character_name, task_name, date)
+        DO UPDATE SET
+          checked = EXCLUDED.checked,
+          gauge = EXCLUDED.gauge
+        `,
+        [row.character_name, row.task_name, false, newGauge]
+      );
     }
 
     await pool.query("COMMIT");
 
-    console.log("[CRON] 완료");
-    console.log("[CRON UPDATE]", {
-      character: row.character_name,
-      task: row.task_name,
-      before: row.gauge,
-      after: newGauge
-    });
     res.json({ success: true });
 
   } catch (err) {
     await pool.query("ROLLBACK");
-    console.error("[CRON ERROR]", err);
+    console.error(err);
     res.status(500).json({ error: "cron 실패" });
   }
 });
