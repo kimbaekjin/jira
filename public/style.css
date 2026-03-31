@@ -37,28 +37,6 @@ body {
   margin-top: 10px;
 }
 
-.hw-gauge::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 20%;  /* 40/200 = 20% 단위 */
-  width: 1px;
-  height: 100%;
-  background: rgba(0,0,0,0.1);
-}
-
-.hw-gauge::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 40%;
-  width: 1px;
-  height: 100%;
-  background: rgba(0,0,0,0.1);
-}
-/* 반복적으로 60%, 80% 추가 */
-.hw-gauge div:nth-child(1)::before { /* optional for dynamic */ }
-
 .hw-gauge-fill {
   height: 100%;
   width: 0%;
