@@ -4,6 +4,7 @@ import { renderGems } from "../gems/gemRenderer.js";
 import { renderEquipment } from "../equipment/equipmentRenderer.js";
 import { renderArkGrid } from "../arkgrid/arkgridRenderer.js";
 import { renderSkills} from "../skill/skillRenderer.js";
+import { renderArkPassive} from "../arkpassive/arkpassiveRenderer.js";
 
 export function openCharacterPopup(name) {
   const { popup, content } = createPopupBase(name);
@@ -34,6 +35,13 @@ export function openCharacterPopup(name) {
       content.appendChild(el);
     }
 
+    if (activeTab === "아크패시브") {
+      console.log("아크패시브 탭 진입");
+      const el = await renderArkPassive(name);
+      content.innerHTML = "";
+      content.appendChild(el);
+    }
+
     if (activeTab === "아크그리드") {
         const el = await renderArkGrid(name);
         content.innerHTML = "";
@@ -41,7 +49,7 @@ export function openCharacterPopup(name) {
     }
   }
 
-  const tabWrap = createTabs(["장비", "스킬", "아크그리드", "보석"], (tab) => {
+  const tabWrap = createTabs(["아크패시브", "장비", "스킬", "아크그리드", "보석"], (tab) => {
     activeTab = tab;
     renderContent();
   });

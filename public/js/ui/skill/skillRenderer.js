@@ -101,7 +101,8 @@ export async function renderSkills(name) {
         background: bg,
         border: `1px solid ${border}`,
         fontSize: "10px",
-        color: "#fff"
+        color: "#fff",
+        whiteSpace: "nowrap"
       });
 
       runeBox.innerHTML = `

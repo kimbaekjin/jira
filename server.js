@@ -53,6 +53,7 @@ app.get("/api/armories/:name/:type", async (req, res) => {
     console.log(type)
     let endpoint = "";
     if (type === "equipment") endpoint = "equipment";
+    if (type === "arkpassive") endpoint = "arkpassive";
     if (type === "combat-skills") endpoint = "combat-skills";
     if (type === "gems") endpoint = "gems";
     if (type === "arkgrid") endpoint = "arkgrid";
