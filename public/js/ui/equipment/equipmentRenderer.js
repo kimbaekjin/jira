@@ -219,7 +219,7 @@ function getColor(type, stat) {
         return "#ddd";
       }
     }
-    console.log("NAME:", name);
+
     const key = Object.keys(table).find(k =>
     normalizeForMatch(k) === normalizeForMatch(name)
       );
@@ -413,19 +413,37 @@ function createItem(item) {
               팔찌 효과
             </div>
 
-            ${
-                effects.map(s => {
-                  const color = getColor(type, s);
+${
+  effects.map(s => {
+    const color = getColor(type, s);
+    const level = getLevel(type, s); // effects에서도 동일하게 level이 있다면
 
-                  return `<div style="
-                    color:${color};
-                    margin-bottom:6px;
-                    line-height:1.5;
-                  ">
-                    ${formatBraceletEffect(s)}
-                  </div>`;
-                }).join("")
+    return `
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px; line-height:1.5;">
 
+        ${level ? `
+          <div style="
+            width:16px;
+            height:16px;
+            border:1px solid ${color};
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:10px;
+            font-weight:bold;
+            color:${color};
+          ">
+            ${level}
+          </div>
+        ` : ""}
+
+        <div style="color:${color}">
+          ${formatBraceletEffect(s)}
+        </div>
+
+      </div>
+    `;
+  }).join("")
             }
           `;
         }
@@ -448,10 +466,35 @@ function createItem(item) {
           연마 효과
         </div>
 
-        ${options.map(stat => {
-          const color = getColor(type, stat);
-          return `<div style="color:${color}">${stat}</div>`;
-        }).join("")}
+    ${options.map(stat => {
+      const color = getColor(type, stat);
+      const level = getLevel(type, stat);
+
+      return `
+        <div style="display:flex; align-items:center; gap:6px;">
+
+          ${level ? `
+            <div style="
+              width:16px;
+              height:16px;
+              border:1px solid ${color};
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:10px;
+              font-weight:bold;
+              color:${color};
+            ">
+              ${level}
+            </div>
+          ` : ""}
+
+          <div style="color:${color}">
+            ${stat}
+          </div>
+        </div>
+      `;
+    }).join("")}
       `;
     }
 
@@ -496,6 +539,28 @@ function createItem(item) {
   }
 
   return row;
+}
+
+function getLevel(type, stat) {
+  const color = getColor(type, stat);
+
+  switch (color) {
+    case "#ff922b":
+      return "상";
+
+    case "#845ef7":
+      return "중";
+
+    case "#339af0":
+      return "하";
+
+    // 👇 여기부터는 "등급 없음"
+    case "#adb5bd":
+    case "#ddd":
+    case "#868e96":
+    default:
+      return "";
+  }
 }
 
 function getQualityTextColor(q) {
