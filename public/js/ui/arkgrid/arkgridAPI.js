@@ -5,6 +5,5 @@ export async function fetchArkGrid(name) {
     const text = await res.text();
     throw new Error(text);
   }
-
   return await res.json();
 }
