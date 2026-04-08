@@ -1,84 +1,287 @@
 // server.js (ES Module)
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import { Pool } from 'pg';
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { Pool } from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
-import cron from "node-cron";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const profileCache = new Map();
-const PROFILE_TTL = 60 * 1000; // 1분
-
-const armoryCache = new Map();
-const CACHE_TTL = 60 * 1000; // 1분
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+// ================= 로그 미들웨어 =================
+app.use((req, res, next) => {
+  console.log(`[REQ] ${req.method} ${req.url}`);
+  next();
+});
+
+// ================= 환경변수 =================
+const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.LOSTARK_API_KEY;
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!API_KEY) {
+  console.error("❌ LOSTARK_API_KEY가 설정되지 않았습니다.");
+}
+if (!DATABASE_URL) {
+  console.error("❌ DATABASE_URL이 설정되지 않았습니다.");
+}
+
 // ================= DB 연결 =================
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // Supabase 등 필요
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
+
+// ================= 캐시 =================
+const profileCache = new Map();
+const armoryCache = new Map();
+
+const PROFILE_TTL = 10 * 60 * 1000; // 10분
+const CACHE_TTL = 10 * 60 * 1000;   // 10분
+
+// ================= 유틸 =================
+function getCache(cacheMap, key, ttl) {
+  const cached = cacheMap.get(key);
+  if (!cached) return null;
+
+  if (Date.now() - cached.time < ttl) {
+    return cached.data;
+  }
+
+  cacheMap.delete(key);
+  return null;
+}
+
+function setCache(cacheMap, key, data) {
+  cacheMap.set(key, {
+    data,
+    time: Date.now()
+  });
+}
+
+function getArmoryEndpoint(type) {
+  const map = {
+    equipment: "equipment",
+    arkpassive: "arkpassive",
+    "combat-skills": "combat-skills",
+    gems: "gems",
+    arkgrid: "arkgrid"
+  };
+
+  return map[type] || "";
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function safeFetchJson(url, options = {}, timeoutMs = 5000) {
+  try {
+    const response = await fetchWithTimeout(url, options, timeoutMs);
+    const text = await response.text();
+
+    if (!response.ok) {
+      console.error("[API ERROR]", response.status, url, text);
+      return null;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (parseErr) {
+      console.error("[JSON PARSE ERROR]", url, parseErr);
+      return null;
+    }
+  } catch (err) {
+    if (err.name === "AbortError") {
+      console.error("[TIMEOUT]", url);
+    } else {
+      console.error("[FETCH ERROR]", url, err);
+    }
+    return null;
+  }
+}
+
+async function fetchProfile(name) {
+  const key = name;
+  const cached = getCache(profileCache, key, PROFILE_TTL);
+  if (cached) {
+    console.log("[CACHE HIT] profile:", key);
+    return cached;
+  }
+
+  const encoded = encodeURIComponent(name);
+  const url = `https://developer-lostark.game.onstove.com/armories/characters/${encoded}/profiles`;
+
+  console.time(`[PROFILE FETCH] ${name}`);
+
+  const data = await safeFetchJson(
+    url,
+    {
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${API_KEY}`
+      }
+    },
+    5000
+  );
+
+  console.timeEnd(`[PROFILE FETCH] ${name}`);
+
+  if (data) {
+    setCache(profileCache, key, data);
+    return data;
+  }
+
+  return {
+    CharacterImage: "/images/placeholder.png",
+    CharacterName: name,
+    ItemAvgLevel: 0,
+    CombatPower: 0
+  };
+}
+
+async function fetchArmory(name, type) {
+  const endpoint = getArmoryEndpoint(type);
+  if (!endpoint) return null;
+
+  const key = `${name}-${type}`;
+  const cached = getCache(armoryCache, key, CACHE_TTL);
+  if (cached) {
+    console.log("[CACHE HIT] armory:", key);
+    return cached;
+  }
+
+  const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(name)}/${endpoint}`;
+
+  console.time(`[ARMORY FETCH] ${key}`);
+
+  const data = await safeFetchJson(
+    url,
+    {
+      headers: {
+        Authorization: `Bearer ${API_KEY}`
+      }
+    },
+    5000
+  );
+
+  console.timeEnd(`[ARMORY FETCH] ${key}`);
+
+  if (data) {
+    setCache(armoryCache, key, data);
+    return data;
+  }
+
+  return null;
+}
 
 // ================= 루트 =================
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ================= 캐릭터 API =================
-const API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyIsImtpZCI6IktYMk40TkRDSTJ5NTA5NWpjTWk5TllqY2lyZyJ9.eyJpc3MiOiJodHRwczovL2x1ZHkuZ2FtZS5vbnN0b3ZlLmNvbSIsImF1ZCI6Imh0dHBzOi8vbHVkeS5nYW1lLm9uc3RvdmUuY29tL3Jlc291cmNlcyIsImNsaWVudF9pZCI6IjEwMDAwMDAwMDAwMjgzMzcifQ.DyyRxqMKmeWLtf_zJWNkMabxMBbdqa5YZorrfgA1nXOwyvzuBi-fHzfLO91JIDZLdalvoUVFq-egSAG3ylQlSiMVHA6bBxrlrjjR8-gbVHYP2r3QB0SPFU5kwvTLSsfczDJeVextkgWa_V7BYfIFHrL8rn5MG0xJINb6gbZSIOC9uDnoJ7l0tZ7eos-1qzf-M7Wpa_3V4OriI3jJszn7xuvyIxyFSGd2X5zaVCkRdLNRAxb6qCReX0glkUabYC99GjhgW2Ckz42AA2UhREF4NbAU9hRH7cXeytwoYq_GpaAOw0lrGL8I_T_f3tZqpEE5vpUNbFqcxMvTyr9G04Hh3A";
+// ================= 빠른 통합 API =================
+// profile + equipment 먼저
+app.get("/api/main/:name", async (req, res) => {
+  const { name } = req.params;
 
-// 🔥 로아 Armory 통합 API
-app.get("/api/armories/:name/:type", async (req, res) => {
-  const { name, type } = req.params;
-  const key = `${name}-${type}`;
-  const now = Date.now();
+  console.time(`[MAIN API] ${name}`);
 
   try {
-    // ✅ 캐시 확인
-    if (armoryCache.has(key)) {
-      const cached = armoryCache.get(key);
+    const [profile, equipment] = await Promise.all([
+      fetchProfile(name),
+      fetchArmory(name, "equipment")
+    ]);
 
-      if (now - cached.time < CACHE_TTL) {
-        console.log("서버 캐시 HIT:", key);
-        return res.json(cached.data);
-      }
-    }
-    console.log(type)
-    let endpoint = "";
-    if (type === "equipment") endpoint = "equipment";
-    if (type === "arkpassive") endpoint = "arkpassive";
-    if (type === "combat-skills") endpoint = "combat-skills";
-    if (type === "gems") endpoint = "gems";
-    if (type === "arkgrid") endpoint = "arkgrid";
+    res.json({
+      profile,
+      equipment: equipment || []
+    });
+  } catch (err) {
+    console.error("[MAIN API ERROR]", err);
+    res.status(500).json({
+      profile: {
+        CharacterImage: "/images/placeholder.png",
+        CharacterName: name,
+        ItemAvgLevel: 0,
+        CombatPower: 0
+      },
+      equipment: []
+    });
+  } finally {
+    console.timeEnd(`[MAIN API] ${name}`);
+  }
+});
+
+// ================= 상세 통합 API =================
+// 느린 데이터는 따로
+app.get("/api/detail/:name", async (req, res) => {
+  const { name } = req.params;
+
+  console.time(`[DETAIL API] ${name}`);
+
+  try {
+    const results = await Promise.allSettled([
+      fetchArmory(name, "arkpassive"),
+      fetchArmory(name, "combat-skills"),
+      fetchArmory(name, "gems"),
+      fetchArmory(name, "arkgrid")
+    ]);
+
+    res.json({
+      arkpassive: results[0].status === "fulfilled" ? results[0].value : null,
+      skills: results[1].status === "fulfilled" ? results[1].value : null,
+      gems: results[2].status === "fulfilled" ? results[2].value : null,
+      arkgrid: results[3].status === "fulfilled" ? results[3].value : null
+    });
+  } catch (err) {
+    console.error("[DETAIL API ERROR]", err);
+    res.status(500).json({
+      arkpassive: null,
+      skills: null,
+      gems: null,
+      arkgrid: null
+    });
+  } finally {
+    console.timeEnd(`[DETAIL API] ${name}`);
+  }
+});
+
+// ================= 기존 Armory 단일 API 유지 =================
+app.get("/api/armories/:name/:type", async (req, res) => {
+  const { name, type } = req.params;
+
+  try {
+    const endpoint = getArmoryEndpoint(type);
 
     if (!endpoint) {
       return res.status(400).json({ error: "잘못된 type" });
     }
 
-    const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(name)}/${endpoint}`;
+    const data = await fetchArmory(name, type);
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${API_KEY}`
-      },
-    });
-
-    const data = await response.json();
-
-    // ✅ 캐시에 저장
-    armoryCache.set(key, {
-      data,
-      time: now
-    });
-
-    console.log("API 호출:", key);
+    if (data === null) {
+      return res.status(502).json({ error: "외부 API 응답 실패" });
+    }
 
     res.json(data);
   } catch (err) {
@@ -87,80 +290,44 @@ app.get("/api/armories/:name/:type", async (req, res) => {
   }
 });
 
+// ================= 기존 Profile API 유지 =================
 app.get("/character/:name", async (req, res) => {
-  const name = req.params.name;
-  const key = name;
-  const now = Date.now();
+  const { name } = req.params;
 
   try {
-    // ✅ 캐시 확인
-    if (profileCache.has(key)) {
-      const cached = profileCache.get(key);
-
-      if (now - cached.time < PROFILE_TTL) {
-        console.log("프로필 캐시 HIT:", key);
-        return res.json(cached.data);
-      }
-    }
-
-    const encoded = encodeURIComponent(name);
-
-    const response = await fetch(
-      `https://developer-lostark.game.onstove.com/armories/characters/${encoded}/profiles`,
-      {
-        headers: {
-          accept: "application/json",
-          authorization: `Bearer ${API_KEY}`
-        }
-      }
-    );
-
-    const text = await response.text();
-    if (!response.ok) return res.status(response.status).send(text);
-
-    const data = JSON.parse(text);
-
-    // ✅ 캐시에 저장
-    profileCache.set(key, {
-      data,
-      time: now
-    });
-
-    console.log("프로필 API 호출:", key);
-
+    const data = await fetchProfile(name);
     res.json(data);
-
   } catch (err) {
-    console.error(err);
-
-    const fallback = {
+    console.error("Profile API 에러:", err);
+    res.json({
       CharacterImage: "/images/placeholder.png",
       CharacterName: name,
       ItemAvgLevel: 0,
       CombatPower: 0
-    };
-
-    res.json(fallback);
+    });
   }
 });
 
-// ================= RAID =================
+// ================= RAID 저장 =================
 app.post("/api/raid/save", async (req, res) => {
   const { character, raids } = req.body;
 
-  if (!Array.isArray(raids)) return res.status(400).json({ error: "raids 배열 필요" });
+  if (!Array.isArray(raids)) {
+    return res.status(400).json({ error: "raids 배열 필요" });
+  }
 
   try {
     for (const r of raids) {
-    console.log("DB에 넣을 레이드 데이터:", [
-    character,
-    r.raid,
-    r.level,
-    r.gold ?? false,
-    r.selected ?? true,
-    Number(r.busFee) || 0,
-    r.completed ?? false
-  ]);
+      console.log("DB에 넣을 레이드 데이터:", [
+        character,
+        r.raid,
+        r.level,
+        r.gold ?? false,
+        r.selected ?? true,
+        Number(r.busFee) || 0,
+        r.completed ?? false
+      ]);
+
       await pool.query(
         `INSERT INTO public.character_raid
          (character_name, raid_name, level, gold, selected, bus_fee, completed)
@@ -191,8 +358,7 @@ app.post("/api/raid/save", async (req, res) => {
   }
 });
 
-// 🔹 RAID 조회 (팝업/카드 복원용)
-// server.js - RAID 조회
+// ================= RAID 조회 =================
 app.get("/api/raid/:character", async (req, res) => {
   const { character } = req.params;
 
@@ -210,14 +376,13 @@ app.get("/api/raid/:character", async (req, res) => {
       [character]
     );
 
-    // DB → 프론트 변환
-    const formatted = rows.map(r => ({
+    const formatted = rows.map((r) => ({
       raid: r.raid,
       level: r.level,
       gold: r.gold,
       selected: r.selected,
       busFee: r.bus_fee ?? 0,
-      completed: r.completed ?? false // ✅ 핵심 추가
+      completed: r.completed ?? false
     }));
 
     res.json(formatted);
@@ -227,7 +392,7 @@ app.get("/api/raid/:character", async (req, res) => {
   }
 });
 
-// ================= HOMEWORK =================
+// ================= HOMEWORK 조회 =================
 app.get("/api/homework/:character", async (req, res) => {
   const { character } = req.params;
 
@@ -235,7 +400,8 @@ app.get("/api/homework/:character", async (req, res) => {
     const { rows } = await pool.query(
       `SELECT task_name, checked, gauge
        FROM character_homework
-       WHERE character_name = $1 AND date = CURRENT_DATE`,
+       WHERE character_name = $1
+         AND date = (NOW() AT TIME ZONE 'Asia/Seoul')::date`,
       [character]
     );
 
@@ -246,7 +412,7 @@ app.get("/api/homework/:character", async (req, res) => {
   }
 });
 
-// 🔹 HOMEWORK 저장
+// ================= HOMEWORK 저장 =================
 app.post("/api/homework/:character/:task", async (req, res) => {
   const { character, task } = req.params;
   const { checked, gauge } = req.body;
@@ -255,28 +421,28 @@ app.post("/api/homework/:character/:task", async (req, res) => {
     await pool.query(
       `INSERT INTO character_homework
        (character_name, task_name, date, checked, gauge)
-       VALUES ($1, $2, CURRENT_DATE, $3, $4)
+       VALUES ($1, $2, (NOW() AT TIME ZONE 'Asia/Seoul')::date, $3, $4)
        ON CONFLICT (character_name, task_name, date)
-       DO UPDATE SET checked = $3, gauge = $4`,
+       DO UPDATE SET checked = EXCLUDED.checked, gauge = EXCLUDED.gauge`,
       [character, task, checked, gauge]
     );
 
-    res.json({ success: true });
     console.log("[POST 요청]", {
-    character,
-    task,
-    checked,
-    gauge,
-    time: new Date()
-  });
+      character,
+      task,
+      checked,
+      gauge,
+      time: new Date()
+    });
+
+    res.json({ success: true });
   } catch (err) {
     console.error("HOMEWORK SAVE ERROR:", err);
     res.status(500).json({ error: "DB 업데이트 실패" });
   }
 });
 
-// server.js
-// ================= HOMEWORK CRON =================
+// ================= HOMEWORK CRON TRIGGER =================
 app.post("/api/homework/cron-trigger", async (req, res) => {
   try {
     await pool.query("BEGIN");
@@ -284,7 +450,7 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
     const today = `(NOW() AT TIME ZONE 'Asia/Seoul')::date`;
     const yesterday = `(NOW() AT TIME ZONE 'Asia/Seoul')::date - INTERVAL '1 day'`;
 
-    // ✅ 1. 3일 이전 데이터 삭제
+    // 1. 3일 이전 데이터 삭제
     await pool.query(`
       DELETE FROM character_homework
       WHERE date < ${today} - INTERVAL '2 days'
@@ -292,7 +458,7 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
 
     console.log("[CRON] 오래된 데이터 삭제 완료");
 
-    // ✅ 2. 어제 데이터 가져오기
+    // 2. 어제 데이터 가져오기
     const { rows } = await pool.query(`
       SELECT character_name, task_name, gauge, checked
       FROM character_homework
@@ -316,7 +482,7 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
         newGauge = Math.min(row.gauge + increment, maxGauge);
       }
 
-      // ✅ 3. 오늘 데이터로 저장
+      // 3. 오늘 데이터로 저장
       await pool.query(
         `
         INSERT INTO character_homework
@@ -332,29 +498,20 @@ app.post("/api/homework/cron-trigger", async (req, res) => {
     }
 
     await pool.query("COMMIT");
-
     res.json({ success: true });
-
   } catch (err) {
     await pool.query("ROLLBACK");
-    console.error(err);
+    console.error("CRON ERROR:", err);
     res.status(500).json({ error: "cron 실패" });
   }
 });
 
-// ================= 로그 미들웨어 =================
-app.use((req, res, next) => {
-  console.log("REQ:", req.method, req.url);
-  next();
-});
-
+// ================= 상태 확인 =================
 app.get("/test", (req, res) => {
   res.send("OK");
 });
 
 // ================= 서버 실행 =================
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on ${PORT}`);
 });
