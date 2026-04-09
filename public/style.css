@@ -399,8 +399,6 @@ button {
   filter: saturate(1.05);
 }
 
-
-
 .total-gold {
   margin-bottom: 12px;
   padding: 14px 16px;
@@ -420,6 +418,13 @@ button {
   font-size: 18px;
   font-weight: 900;
   letter-spacing: -0.02em;
+}
+
+.raid-info-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 10px;
 }
 
 .raid-gold-box {
@@ -467,6 +472,28 @@ button {
   padding-top: 8px;
   border-top: 1px solid rgba(255, 182, 193, 0.24);
   color: #4f3b44;
+}
+
+/* 하트 옆 난이도 배지 */
+.raid-level-badge {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    0 4px 10px rgba(226, 156, 181, 0.10);
+  border: 1px solid rgba(255, 182, 193, 0.24);
+  z-index: 3;
+  white-space: nowrap;
 }
 
 /* =========================
@@ -645,30 +672,6 @@ button {
   right: 0;
   bottom: 0;
   cursor: nwse-resize;
-}
-
-.raid-info-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-left: 10px;
-}
-
-.raid-level-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: flex-start;
-  min-height: 28px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.7),
-    0 4px 10px rgba(226, 156, 181, 0.10);
-  border: 1px solid rgba(255, 182, 193, 0.24);
 }
 
 /* =========================
