@@ -15,10 +15,17 @@ export function createCard(name) {
   card.innerHTML = `
     <div class="img-box">
       <img class="char-img" src="" />
+
       <div class="overlay">
-        <div class="name">로딩중...</div>
-        <div class="level">Lv. -</div>
-        <div class="power">전투력 -</div>
+        <div class="name-row">
+          <div class="name">로딩중...</div>
+          <div class="heart-badge"><span>♥</span></div>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-pill level">Lv. -</div>
+          <div class="meta-pill power">전투력 -</div>
+        </div>
       </div>
     </div>
 
@@ -29,11 +36,11 @@ export function createCard(name) {
     </div>
   `;
 
-    const imgBox = card.querySelector(".img-box");
+  const imgBox = card.querySelector(".img-box");
 
-    imgBox.addEventListener("click", () => {
-      openCharacterPopup(name);
-    });
+  imgBox.addEventListener("click", () => {
+    openCharacterPopup(name);
+  });
 
   return card;
 }
