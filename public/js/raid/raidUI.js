@@ -28,125 +28,153 @@ export function renderRaidDisplay(displayArea, data, characterName) {
   let totalGold = 0;
 
   data.forEach(r => {
-    if (!r.level && (!r.busFee || r.busFee === 0)) return;
+  if (!r.level && (!r.busFee || r.busFee === 0)) return;
 
-    const row = document.createElement("div");
-    row.className = "raid-row";
+  const row = document.createElement("div");
+  row.className = "raid-row";
 
-    const heartWrap = document.createElement("div");
-    heartWrap.className = "raid-heart-wrap";
+  const heartWrap = document.createElement("div");
+  heartWrap.className = "raid-heart-wrap";
 
-    const heart = document.createElement("div");
-    heart.className = "heart-badge raid-heart";
-    heart.style.position = "absolute";
-    heart.style.top = "50%";
-    heart.style.left = "50%";
-    heart.style.transform = "translate(-50%, -50%) rotate(45deg)";
-    heart.style.cursor = "pointer";
+  const heart = document.createElement("div");
+  heart.className = "heart-badge raid-heart";
+  heart.style.position = "absolute";
+  heart.style.top = "50%";
+  heart.style.left = "50%";
+  heart.style.transform = "translate(-50%, -50%) rotate(45deg)";
+  heart.style.cursor = "pointer";
 
-    const text = document.createElement("span");
-    text.className = "raid-heart-text";
-    text.style.position = "relative";
-    text.style.zIndex = "1";
-    text.style.fontFamily = "Pretendard, sans-serif";
-    text.style.fontWeight = "900";
-    text.style.transform = "rotate(-45deg)";
-    text.style.fontSize = r.raid.length >= 3 ? "13px" : "14px";
-    text.style.lineHeight = "1.1";
-    text.style.letterSpacing = "-0.03em";
-    text.style.textAlign = "center";
-    text.style.whiteSpace = "pre-line";
-    text.style.textShadow = "0 1px 0 rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.08)";
-    text.style.width = "78px";
-    text.innerText = r.level ? `${r.raid} ${r.level}` : r.raid;
+  const text = document.createElement("span");
+  text.className = "raid-heart-text";
+  text.style.position = "relative";
+  text.style.zIndex = "1";
+  text.style.fontFamily = "Pretendard, sans-serif";
+  text.style.fontWeight = "900";
+  text.style.transform = "rotate(-45deg)";
+  text.style.fontSize = "15px";
+  text.style.textAlign = "center";
+  text.style.lineHeight = "1.05";
+  text.style.letterSpacing = "-0.04em";
+  text.style.color = "#fffafc";
+  text.style.textShadow = "0 1px 0 rgba(255,255,255,0.18), 0 2px 4px rgba(0,0,0,0.16)";
+  text.innerText = r.raid;
 
-    const baseColor = colors[r.level] || "#fff";
-    text.style.color = baseColor;
+  heart.appendChild(text);
+  heartWrap.appendChild(heart);
+  row.appendChild(heartWrap);
 
-    heart.appendChild(text);
-    heartWrap.appendChild(heart);
-    row.appendChild(heartWrap);
+  const infoWrap = document.createElement("div");
+  infoWrap.className = "raid-info-wrap";
 
-    const goldBox = document.createElement("div");
-    goldBox.className = "raid-gold-box";
+  const levelBadge = document.createElement("div");
+  levelBadge.className = "raid-level-badge";
+  levelBadge.innerText = r.level || "-";
 
-    let raidGold = 0;
-    let busGold = 0;
+  const levelColors = {
+    "노말": "#fff3f8",
+    "하드": "#ffe3ec",
+    "나메": "#f3f3f3",
+    "1단계": "#eefaf4",
+    "2단계": "#fff2e8",
+    "3단계": "#f3f0ff"
+  };
 
-    if (r.gold) {
-      raidGold = raidGoldTable[r.raid]?.[r.level] || 0;
-      totalGold += raidGold;
+  const levelTextColors = {
+    "노말": "#d45b86",
+    "하드": "#c93f6f",
+    "나메": "#666",
+    "1단계": "#2f9e6f",
+    "2단계": "#d97706",
+    "3단계": "#6d5bd0"
+  };
+
+  levelBadge.style.background = levelColors[r.level] || "#fff3f8";
+  levelBadge.style.color = levelTextColors[r.level] || "#c94f7c";
+
+  const goldBox = document.createElement("div");
+  goldBox.className = "raid-gold-box";
+
+  let raidGold = 0;
+  let busGold = 0;
+
+  if (r.gold) {
+    raidGold = raidGoldTable[r.raid]?.[r.level] || 0;
+    totalGold += raidGold;
+  }
+  if (r.busFee && r.busFee > 0) {
+    busGold = r.busFee;
+    totalGold += busGold;
+  }
+
+  const sum = raidGold + busGold;
+
+  goldBox.innerHTML = `
+    <div class="raid-gold-line">레이드 골드: <span class="value">${raidGold.toLocaleString()}G</span></div>
+    <div class="raid-gold-line">버스 골드: <span class="value">${busGold.toLocaleString()}G</span></div>
+    <div class="raid-gold-line total-line">합계: <span class="value">${sum.toLocaleString()}G</span></div>
+  `;
+
+  infoWrap.appendChild(levelBadge);
+  infoWrap.appendChild(goldBox);
+  row.appendChild(infoWrap);
+
+  let completed = r.completed || false;
+
+  function updateCompletedStyle() {
+    if (completed) {
+      text.style.textDecoration = "line-through";
+      text.style.opacity = "0.5";
+      heart.style.opacity = "0.45";
+      levelBadge.style.opacity = "0.45";
+      goldBox.style.opacity = "0.45";
+      goldBox.style.textDecoration = "line-through";
+    } else {
+      text.style.textDecoration = "none";
+      text.style.opacity = "1";
+      heart.style.opacity = "1";
+      levelBadge.style.opacity = "1";
+      goldBox.style.opacity = "1";
+      goldBox.style.textDecoration = "none";
     }
-    if (r.busFee && r.busFee > 0) {
-      busGold = r.busFee;
-      totalGold += busGold;
-    }
+  }
 
-    const sum = raidGold + busGold;
+  updateCompletedStyle();
 
-    goldBox.innerHTML = `
-      <div class="raid-gold-line">레이드 골드: <span class="value">${raidGold.toLocaleString()}G</span></div>
-      <div class="raid-gold-line">버스 골드: <span class="value">${busGold.toLocaleString()}G</span></div>
-      <div class="raid-gold-line total-line">합계: <span class="value">${sum.toLocaleString()}G</span></div>
-    `;
+  heart.addEventListener("click", async () => {
+    completed = !completed;
 
-    row.appendChild(goldBox);
+    const target = data.find(d => d.raid === r.raid);
+    if (target) target.completed = completed;
 
-    let completed = r.completed || false;
-
-    function updateCompletedStyle() {
-      if (completed) {
-        text.style.textDecoration = "line-through";
-        text.style.opacity = "0.5";
-        heart.style.opacity = "0.45";
-        goldBox.style.opacity = "0.45";
-        goldBox.style.textDecoration = "line-through";
-      } else {
-        text.style.textDecoration = "none";
-        text.style.opacity = "1";
-        heart.style.opacity = "1";
-        goldBox.style.opacity = "1";
-        goldBox.style.textDecoration = "none";
-      }
-    }
+    heartWrap.classList.remove("pop");
+    void heartWrap.offsetWidth;
+    heartWrap.classList.add("pop");
 
     updateCompletedStyle();
 
-    heart.addEventListener("click", async () => {
-      completed = !completed;
-
-      const target = data.find(d => d.raid === r.raid);
-      if (target) target.completed = completed;
-
-      heartWrap.classList.remove("pop");
-      void heartWrap.offsetWidth;
-      heartWrap.classList.add("pop");
-
-      updateCompletedStyle();
-
-      try {
-        await fetch("/api/raid/save", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            character: characterName,
-            raids: data.map(x => ({
-              raid: x.raid,
-              level: x.level,
-              gold: x.gold || false,
-              selected: true,
-              busFee: Number(x.busFee) || 0,
-              completed: x.completed || false
-            }))
-          })
-        });
-      } catch (e) {
-        console.warn("완료 상태 저장 실패", e);
-      }
-    });
-
-    displayArea.appendChild(row);
+    try {
+      await fetch("/api/raid/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          character: characterName,
+          raids: data.map(x => ({
+            raid: x.raid,
+            level: x.level,
+            gold: x.gold || false,
+            selected: true,
+            busFee: Number(x.busFee) || 0,
+            completed: x.completed || false
+          }))
+        })
+      });
+    } catch (e) {
+      console.warn("완료 상태 저장 실패", e);
+    }
   });
+
+  displayArea.appendChild(row);
+});
 
   if (displayArea.children.length === 0) {
     displayArea.style.display = "none";
@@ -254,11 +282,11 @@ export function openRaidEditPopup(card, displayArea, characterName, savedData = 
   ];
 
     const colors = {
-      "노말": "#fff6fb",
-      "하드": "#e9fff4",
-      "나메": "#f3f3f3",
-      "1단계": "#e9fff4",
-      "2단계": "#fff1e8",
+      "노말": "#fff8fc",
+      "하드": "#d8fff1",
+      "나메": "#f7f7f7",
+      "1단계": "#d8fff1",
+      "2단계": "#fff0e8",
       "3단계": "#ffffff"
     };
 
