@@ -125,6 +125,64 @@ body {
   cursor: nwse-resize;
 }
 
+.yt-search {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.yt-search input {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid #f3c9d6;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.yt-search button {
+  padding: 4px 8px;
+  border: none;
+  background: #ff6b9d;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 검색 결과 */
+.yt-results {
+  max-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 6px;
+}
+
+/* 각 영상 */
+.yt-item {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.yt-item:hover {
+  background: rgba(255, 105, 135, 0.1);
+}
+
+.yt-thumb {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.yt-title {
+  font-size: 11px;
+  color: #333;
+  line-height: 1.2;
+}
+
 .homework {
   padding: 10px;
   text-align: left;

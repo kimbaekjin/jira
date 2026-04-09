@@ -10,28 +10,36 @@
   <div class="container" id="container"></div>
 
   <!-- 작은 노래 박스 -->
-  <div class="music-box" id="musicBox">
-    <div class="music-title">🎵 BGM</div>
+<div class="music-box" id="musicBox">
+  <div class="music-title">🎵 BGM</div>
 
-    <iframe
-      src="https://www.youtube.com/embed/7EPx1wkkqBI"
-      title="YouTube video player"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen>
-    </iframe>
-
-    <!-- 리사이즈 핸들 -->
-    <div class="resize top"></div>
-    <div class="resize right"></div>
-    <div class="resize bottom"></div>
-    <div class="resize left"></div>
-
-    <div class="resize corner top-left"></div>
-    <div class="resize corner top-right"></div>
-    <div class="resize corner bottom-left"></div>
-    <div class="resize corner bottom-right"></div>
+  <!-- 🔍 검색 영역 -->
+  <div class="yt-search">
+    <input type="text" id="ytSearchInput" placeholder="유튜브 검색..." />
+    <button id="ytSearchBtn">검색</button>
   </div>
+
+  <!-- 📄 검색 결과 -->
+  <div class="yt-results" id="ytResults"></div>
+
+  <!-- 🎬 플레이어 -->
+  <iframe
+    id="ytPlayer"
+    src="https://www.youtube.com/embed/7EPx1wkkqBI"
+    frameborder="0"
+    allowfullscreen>
+  </iframe>
+
+  <!-- 리사이즈 핸들 그대로 유지 -->
+  <div class="resize top"></div>
+  <div class="resize right"></div>
+  <div class="resize bottom"></div>
+  <div class="resize left"></div>
+  <div class="resize corner top-left"></div>
+  <div class="resize corner top-right"></div>
+  <div class="resize corner bottom-left"></div>
+  <div class="resize corner bottom-right"></div>
+</div>
 
   <script type="module" src="./app.js"></script>
 </body>
