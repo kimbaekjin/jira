@@ -6,8 +6,8 @@ export function renderRaidDisplay(displayArea, data, characterName) {
   displayArea.innerHTML = "";
 
   data.sort((a, b) => {
-  return raidOrder.indexOf(a.raid) - raidOrder.indexOf(b.raid);
-});
+    return raidOrder.indexOf(a.raid) - raidOrder.indexOf(b.raid);
+  });
 
   if (!data || data.length === 0) {
     displayArea.style.display = "none";
@@ -31,19 +31,13 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     if (!r.level && (!r.busFee || r.busFee === 0)) return;
 
     const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.alignItems = "center";
-    row.style.marginBottom = "10px";
-    row.style.minHeight = "60px";
+    row.className = "raid-row";
 
     const heartWrap = document.createElement("div");
-    heartWrap.style.width = "150px";
-    heartWrap.style.height = "150px";
-    heartWrap.style.position = "relative";
-    heartWrap.style.marginRight = "8px";
+    heartWrap.className = "raid-heart-wrap";
 
     const heart = document.createElement("div");
-    heart.className = "heart-badge";
+    heart.className = "heart-badge raid-heart";
     heart.style.position = "absolute";
     heart.style.top = "50%";
     heart.style.left = "50%";
@@ -51,6 +45,7 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     heart.style.cursor = "pointer";
 
     const text = document.createElement("span");
+    text.className = "raid-heart-text";
     text.style.position = "relative";
     text.style.zIndex = "1";
     text.style.fontFamily = "Pretendard, sans-serif";
@@ -68,13 +63,7 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     row.appendChild(heartWrap);
 
     const goldBox = document.createElement("div");
-    goldBox.style.background = "#ffe4ec";
-    goldBox.style.padding = "10px";
-    goldBox.style.borderRadius = "10px";
-    goldBox.style.marginLeft = "10px";
-    goldBox.style.minWidth = "140px";
-    goldBox.style.fontSize = "12px";
-    goldBox.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+    goldBox.className = "raid-gold-box";
 
     let raidGold = 0;
     let busGold = 0;
@@ -91,11 +80,9 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     const sum = raidGold + busGold;
 
     goldBox.innerHTML = `
-      <div>레이드 골드: ${raidGold.toLocaleString()}G</div>
-      <div>버스 골드: ${busGold.toLocaleString()}G</div>
-      <div style="font-weight:700; margin-top:4px;">
-        합계: ${sum.toLocaleString()}G
-      </div>
+      <div class="raid-gold-line">레이드 골드: <span class="value">${raidGold.toLocaleString()}G</span></div>
+      <div class="raid-gold-line">버스 골드: <span class="value">${busGold.toLocaleString()}G</span></div>
+      <div class="raid-gold-line total-line">합계: <span class="value">${sum.toLocaleString()}G</span></div>
     `;
 
     row.appendChild(goldBox);
@@ -103,11 +90,14 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     let completed = r.completed || false;
 
     function updateCompletedStyle() {
+      heart.classList.toggle("completed", completed);
+      goldBox.classList.toggle("completed", completed);
+
       if (completed) {
         text.style.textDecoration = "line-through";
         text.style.opacity = "0.5";
         heart.style.opacity = "0.4";
-        goldBox.style.opacity = "0.3";
+        goldBox.style.opacity = "0.35";
         goldBox.style.textDecoration = "line-through";
       } else {
         text.style.textDecoration = "none";
@@ -120,34 +110,38 @@ export function renderRaidDisplay(displayArea, data, characterName) {
 
     updateCompletedStyle();
 
-    heart.addEventListener("click", async () => {
-      completed = !completed;
+        heart.addEventListener("click", async () => {
+          completed = !completed;
 
-      const target = data.find(d => d.raid === r.raid);
-      if (target) target.completed = completed;
+          const target = data.find(d => d.raid === r.raid);
+          if (target) target.completed = completed;
 
-      updateCompletedStyle();
+          heart.classList.remove("pop");
+          void heart.offsetWidth;
+          heart.classList.add("pop");
 
-      try {
-        await fetch("/api/raid/save", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            character: characterName,
-            raids: data.map(x => ({
-              raid: x.raid,
-              level: x.level,
-              gold: x.gold || false,
-              selected: true,
-              busFee: Number(x.busFee) || 0,
-              completed: x.completed || false
-            }))
-          })
+          updateCompletedStyle();
+
+          try {
+            await fetch("/api/raid/save", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                character: characterName,
+                raids: data.map(x => ({
+                  raid: x.raid,
+                  level: x.level,
+                  gold: x.gold || false,
+                  selected: true,
+                  busFee: Number(x.busFee) || 0,
+                  completed: x.completed || false
+                }))
+              })
+            });
+          } catch (e) {
+            console.warn("완료 상태 저장 실패", e);
+          }
         });
-      } catch (e) {
-        console.warn("완료 상태 저장 실패", e);
-      }
-    });
 
     displayArea.appendChild(row);
   });
@@ -158,9 +152,8 @@ export function renderRaidDisplay(displayArea, data, characterName) {
   }
 
   const total = document.createElement("div");
-  total.innerText = `총 골드: ${totalGold.toLocaleString()}G`;
-  total.style.marginBottom = "8px";
-  total.style.fontWeight = "bold";
+  total.className = "total-gold";
+  total.innerHTML = `총 골드 <span class="value">${totalGold.toLocaleString()}G</span>`;
 
   displayArea.prepend(total);
 }

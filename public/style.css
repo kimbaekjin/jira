@@ -37,6 +37,7 @@ body {
     0 2px 10px rgba(255, 255, 255, 0.65) inset;
   backdrop-filter: blur(10px);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
 }
 
 .card:hover {
@@ -45,6 +46,44 @@ body {
   box-shadow:
     0 18px 36px rgba(226, 156, 181, 0.28),
     0 2px 10px rgba(255, 255, 255, 0.72) inset;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -120%;
+  width: 70%;
+  height: 140%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.16) 45%,
+    transparent 100%
+  );
+  transform: rotate(12deg);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+}
+
+.card:hover::after {
+  animation: cardShine 1.2s ease;
+  opacity: 1;
+}
+
+@keyframes cardShine {
+  0% {
+    left: -120%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    left: 140%;
+    opacity: 0;
+  }
 }
 
 .img-box {
@@ -80,6 +119,7 @@ body {
     rgba(255, 192, 203, 0.04) 100%
   );
   color: #fff;
+  z-index: 2;
 }
 
 .name-row {
@@ -177,13 +217,46 @@ body {
   background: rgba(255, 255, 255, 0.70);
   border: 1px solid rgba(255, 192, 203, 0.30);
   box-shadow: 0 4px 10px rgba(231, 172, 193, 0.10);
-  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .hw-task:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 8px 18px rgba(231, 172, 193, 0.16);
+  border-color: rgba(255, 146, 178, 0.45);
+}
+
+.hw-task.checked {
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,235,242,0.92));
+  border-color: rgba(255, 128, 170, 0.42);
+  box-shadow:
+    0 8px 18px rgba(231, 172, 193, 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+.hw-task.checked .hw-gauge-fill {
+  filter: saturate(1.08) brightness(1.03);
+}
+
+.hw-task.pop {
+  animation: hwPop 0.28s ease;
+}
+
+@keyframes hwPop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .hw-task label {
@@ -250,7 +323,12 @@ button {
   box-shadow:
     0 2px 6px rgba(226, 156, 181, 0.10),
     inset 0 1px 0 rgba(255,255,255,0.85);
-  transition: all 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .hw-task button:hover,
@@ -260,7 +338,7 @@ button {
   background: linear-gradient(180deg, #fff6f9 0%, #ffdfe9 100%);
   border-color: rgba(219, 131, 163, 0.42);
   color: #c94f7c;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow:
     0 5px 12px rgba(226, 156, 181, 0.16),
     inset 0 1px 0 rgba(255,255,255,0.85);
@@ -274,51 +352,142 @@ button {
 }
 
 /* =========================
-   Gold / Summary Area
+   Raid Display
 ========================= */
-.total-gold {
-  margin-top: 16px;
+.raid-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  min-height: 72px;
+}
+
+.raid-heart-wrap {
+  width: 150px;
+  height: 150px;
+  position: relative;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.raid-heart-text {
+  line-height: 1.2;
+}
+
+/* 레이드 완료 하트 반응 */
+.raid-heart {
+  transition: opacity 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.raid-heart.pop {
+  animation: raidHeartGlow 0.28s ease;
+}
+
+@keyframes raidHeartGlow {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.12);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* 완료 체크 아이콘 */
+.raid-heart.completed::after {
+  content: "✓";
+  position: absolute;
+  right: -8px;
+  top: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff7fb;
+  color: #ff5f93;
   font-size: 16px;
   font-weight: 900;
-  color: #5a434d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 10px rgba(255, 123, 165, 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  transform: rotate(-45deg);
 }
 
-.total-gold strong,
-.total-gold span {
-  color: #d14d79;
+/* 완료된 골드박스 느낌 살짝 */
+.raid-gold-box.completed {
+  background: linear-gradient(180deg, rgba(255,245,248,0.72), rgba(255,232,240,0.78));
+  border-color: rgba(255, 151, 185, 0.34);
 }
 
-.raid-summary,
-.gold-summary,
-.gold-box,
-.raid-gold-box,
-.bottom-summary-box {
-  background: rgba(255, 240, 245, 0.66);
-  border: 1px solid rgba(255, 192, 203, 0.28);
+.total-gold {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.80), rgba(255,238,244,0.90));
+  border: 1px solid rgba(255, 182, 193, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.75),
+    0 8px 18px rgba(226, 156, 181, 0.12);
+  font-size: 15px;
+  font-weight: 800;
+  color: #6a4b58;
+}
+
+.total-gold .value {
+  color: #d94f7f;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.raid-gold-box {
+  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,238,244,0.88));
+  border: 1px solid rgba(255, 182, 193, 0.30);
   border-radius: 18px;
   padding: 14px 16px;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.55),
-    0 4px 10px rgba(226, 156, 181, 0.10);
+  margin-left: 10px;
+  min-width: 170px;
+  font-size: 13px;
   color: #6f5360;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.72),
+    0 8px 18px rgba(226, 156, 181, 0.12);
+  position: relative;
+  overflow: hidden;
 }
 
-.raid-summary strong,
-.gold-summary strong,
-.gold-box strong,
-.raid-gold-box strong,
-.bottom-summary-box strong {
-  color: #4c3942;
-  font-weight: 800;
+.raid-gold-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
 }
 
-.raid-summary .highlight,
-.gold-summary .highlight,
-.gold-box .highlight,
-.raid-gold-box .highlight,
-.bottom-summary-box .highlight {
+.raid-gold-line {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.raid-gold-line:last-child {
+  margin-bottom: 0;
+}
+
+.raid-gold-line .value {
   color: #cf4f7d;
   font-weight: 900;
+}
+
+.raid-gold-line.total-line {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 182, 193, 0.24);
+  color: #4f3b44;
 }
 
 /* =========================
@@ -517,6 +686,12 @@ button {
   color: white;
   box-shadow: 0 6px 14px rgba(255, 107, 129, 0.22);
   flex-shrink: 0;
+  transition: opacity 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.card:hover .heart-badge {
+  box-shadow: 0 10px 18px rgba(255, 107, 129, 0.28);
+  filter: brightness(1.04);
 }
 
 .heart-badge::before,

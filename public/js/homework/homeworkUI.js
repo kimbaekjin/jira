@@ -25,6 +25,14 @@ export function initHomeworkUI(name, card, homeworkData) {
     const taskName = taskEl.dataset.task;
     const checkbox = taskEl.querySelector(".hw-checkbox");
 
+    checkbox.addEventListener("change", () => {
+    taskEl.classList.toggle("checked", checkbox.checked);
+
+    taskEl.classList.remove("pop");
+    void taskEl.offsetWidth;
+    taskEl.classList.add("pop");
+  });
+
     // -------------------- 할의모래시계 --------------------
     if (taskName === "할의모래시계") {
       const gaugeWrapper = taskEl.querySelector(".hw-gauge");
