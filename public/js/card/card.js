@@ -19,7 +19,6 @@ export function createCard(name) {
       <div class="overlay">
         <div class="name-row">
           <div class="name">로딩중...</div>
-          <div class="heart-badge"><span>♥</span></div>
         </div>
 
         <div class="meta-row">

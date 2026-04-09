@@ -72,7 +72,7 @@ body {
 .overlay {
   position: absolute;
   inset: auto 0 0 0;
-  padding: 18px;
+  padding: 16px 18px 18px;
   background: linear-gradient(
     to top,
     rgba(214, 102, 141, 0.88) 0%,
@@ -82,24 +82,60 @@ body {
   color: #fff;
 }
 
+.name-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .name {
-  font-size: 22px;
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(126, 63, 90, 0.22);
+  word-break: keep-all;
+  flex: 1;
+}
+
+.meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 10px rgba(126, 63, 90, 0.2);
+  line-height: 1;
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
 }
 
 .level {
-  font-size: 14px;
-  margin-top: 6px;
-  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.22);
+  margin-top: 0;
 }
 
 .power {
-  font-size: 15px;
-  font-weight: 700;
-  margin-top: 4px;
-  color: #fffafc;
+  background: rgba(255, 240, 245, 0.90);
+  color: #d14d79;
+  border: 1px solid rgba(255,255,255,0.40);
+  margin-top: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.48),
+    0 3px 8px rgba(188, 84, 124, 0.10);
 }
 
 /* =========================
@@ -129,21 +165,25 @@ body {
   font-weight: 700;
   font-size: 15px;
   color: #b85d83;
-  margin: 16px 0 10px;
+  margin: 18px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .hw-task {
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.68);
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.70);
   border: 1px solid rgba(255, 192, 203, 0.30);
   box-shadow: 0 4px 10px rgba(231, 172, 193, 0.10);
-  transition: transform 0.18s ease, background 0.18s ease;
+  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .hw-task:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 18px rgba(231, 172, 193, 0.16);
 }
 
 .hw-task label {
@@ -151,7 +191,7 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #654a57;
 }
 
@@ -167,7 +207,7 @@ body {
   height: 28px;
   background: rgba(255, 221, 230, 0.75);
   border-radius: 999px;
-  margin-top: 8px;
+  margin-top: 10px;
   overflow: hidden;
   border: 1px solid rgba(255, 192, 203, 0.25);
 }
@@ -184,6 +224,101 @@ body {
   font-weight: 800;
   font-size: 12px;
   text-shadow: 0 1px 3px rgba(150, 70, 100, 0.18);
+}
+
+/* =========================
+   Buttons
+========================= */
+button {
+  font-family: inherit;
+}
+
+.hw-task button,
+.homework-section button,
+.raid-edit-btn,
+.gauge-edit-btn {
+  appearance: none;
+  border: 1px solid rgba(219, 131, 163, 0.28);
+  background: linear-gradient(180deg, #fffefe 0%, #ffeef4 100%);
+  color: #8e4f66;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow:
+    0 2px 6px rgba(226, 156, 181, 0.10),
+    inset 0 1px 0 rgba(255,255,255,0.85);
+  transition: all 0.18s ease;
+}
+
+.hw-task button:hover,
+.homework-section button:hover,
+.raid-edit-btn:hover,
+.gauge-edit-btn:hover {
+  background: linear-gradient(180deg, #fff6f9 0%, #ffdfe9 100%);
+  border-color: rgba(219, 131, 163, 0.42);
+  color: #c94f7c;
+  transform: translateY(-1px);
+  box-shadow:
+    0 5px 12px rgba(226, 156, 181, 0.16),
+    inset 0 1px 0 rgba(255,255,255,0.85);
+}
+
+.hw-task button:active,
+.homework-section button:active,
+.raid-edit-btn:active,
+.gauge-edit-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================
+   Gold / Summary Area
+========================= */
+.total-gold {
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #5a434d;
+}
+
+.total-gold strong,
+.total-gold span {
+  color: #d14d79;
+}
+
+.raid-summary,
+.gold-summary,
+.gold-box,
+.raid-gold-box,
+.bottom-summary-box {
+  background: rgba(255, 240, 245, 0.66);
+  border: 1px solid rgba(255, 192, 203, 0.28);
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.55),
+    0 4px 10px rgba(226, 156, 181, 0.10);
+  color: #6f5360;
+}
+
+.raid-summary strong,
+.gold-summary strong,
+.gold-box strong,
+.raid-gold-box strong,
+.bottom-summary-box strong {
+  color: #4c3942;
+  font-weight: 800;
+}
+
+.raid-summary .highlight,
+.gold-summary .highlight,
+.gold-box .highlight,
+.raid-gold-box .highlight,
+.bottom-summary-box .highlight {
+  color: #cf4f7d;
+  font-weight: 900;
 }
 
 /* =========================
@@ -364,44 +499,24 @@ body {
   cursor: nwse-resize;
 }
 
-@media (max-width: 768px) {
-  body {
-    padding: 18px;
-  }
-
-  .container {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .img-box {
-    height: 300px;
-  }
-
-  .music-box {
-    width: calc(100vw - 24px);
-    right: 12px;
-    bottom: 12px;
-  }
-}
-
+/* =========================
+   Heart
+========================= */
 .heart-badge {
   width: 60px;
   height: 60px;
   position: relative;
   background: #ff6b81;
   transform: rotate(45deg);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   text-align: center;
   font-size: 60px;
   font-weight: 600;
   color: white;
-
   box-shadow: 0 6px 14px rgba(255, 107, 129, 0.22);
+  flex-shrink: 0;
 }
 
 .heart-badge::before,
@@ -424,4 +539,38 @@ body {
 
 .heart-badge > * {
   transform: rotate(-45deg);
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 768px) {
+  body {
+    padding: 18px;
+  }
+
+  .container {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .img-box {
+    height: 300px;
+  }
+
+  .name {
+    font-size: 21px;
+  }
+
+  .meta-pill {
+    font-size: 12px;
+    padding: 5px 11px;
+    min-height: 28px;
+  }
+
+  .music-box {
+    width: calc(100vw - 24px);
+    right: 12px;
+    bottom: 12px;
+  }
 }
