@@ -51,8 +51,13 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     text.style.fontFamily = "Pretendard, sans-serif";
     text.style.fontWeight = "900";
     text.style.transform = "rotate(-45deg)";
-    text.style.fontSize = "15px";
+    text.style.fontSize = r.raid.length >= 3 ? "13px" : "14px";
+    text.style.lineHeight = "1.1";
+    text.style.letterSpacing = "-0.03em";
     text.style.textAlign = "center";
+    text.style.whiteSpace = "pre-line";
+    text.style.textShadow = "0 1px 0 rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.08)";
+    text.style.width = "78px";
     text.innerText = r.level ? `${r.raid} ${r.level}` : r.raid;
 
     const baseColor = colors[r.level] || "#fff";
@@ -248,10 +253,14 @@ export function openRaidEditPopup(card, displayArea, characterName, savedData = 
     { name: "성당", levels: ["1단계", "2단계", "3단계"] }
   ];
 
-  const colors = {
-    "노말": "#3498db", "하드": "#e74c3c", "나메": "#7f8c8d",
-    "1단계": "#3498db", "2단계": "#3498db", "3단계": "#3498db"
-  };
+    const colors = {
+      "노말": "#fff6fb",
+      "하드": "#e9fff4",
+      "나메": "#f3f3f3",
+      "1단계": "#e9fff4",
+      "2단계": "#fff1e8",
+      "3단계": "#ffffff"
+    };
 
   let goldCount = 0;
   const result = [];

@@ -390,7 +390,13 @@ button {
 }
 
 .raid-heart-text {
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.10);
+  filter: saturate(1.05);
 }
 
 
@@ -645,8 +651,8 @@ button {
    Heart
 ========================= */
 .heart-badge {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   position: relative;
   background: #ff6b81;
   display: flex;
@@ -668,8 +674,8 @@ button {
 .heart-badge::before,
 .heart-badge::after {
   content: "";
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   position: absolute;
   background: #ff6b81;
   border-radius: 50%;
