@@ -367,21 +367,24 @@ button {
   position: relative;
   margin-right: 8px;
   flex-shrink: 0;
-  transition: filter 0.18s ease;
+  transform-origin: center;
 }
 
 .raid-heart-wrap.pop {
-  animation: raidWrapPulse 0.32s ease;
+  animation: raidWrapPulse 0.36s ease;
 }
 
 @keyframes raidWrapPulse {
   0% {
+    transform: scale(1);
     filter: brightness(1);
   }
-  45% {
-    filter: brightness(1.15) drop-shadow(0 0 10px rgba(255, 120, 160, 0.22));
+  40% {
+    transform: scale(1.08);
+    filter: brightness(1.12);
   }
   100% {
+    transform: scale(1);
     filter: brightness(1);
   }
 }
