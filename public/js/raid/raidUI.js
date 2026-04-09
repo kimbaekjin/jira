@@ -113,9 +113,9 @@ export function renderRaidDisplay(displayArea, data, characterName) {
       const target = data.find(d => d.raid === r.raid);
       if (target) target.completed = completed;
 
-      heart.classList.remove("pop");
-      void heart.offsetWidth;
-      heart.classList.add("pop");
+      heartWrap.classList.remove("pop");
+      void heartWrap.offsetWidth;
+      heartWrap.classList.add("pop");
 
       updateCompletedStyle();
 
