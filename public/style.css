@@ -4,6 +4,127 @@ body {
   padding: 30px;
 }
 
+body {
+  background: linear-gradient(135deg, #fff0f5, #ffdce5);
+  font-family: sans-serif;
+  padding: 30px;
+  margin: 0;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* =========================
+   🎵 Music Box
+========================= */
+.music-box {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 300px;
+  height: 210px;
+  padding: 10px;
+  background: rgba(255, 240, 245, 0.97);
+  border: 1px solid #f3c9d6;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  overflow: hidden;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.music-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d14d72;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.music-box iframe {
+  width: 100%;
+  height: calc(100% - 24px);
+  border: none;
+  border-radius: 10px;
+  display: block;
+  pointer-events: auto;
+}
+
+/* =========================
+   Resize Handle
+========================= */
+.resize {
+  position: absolute;
+  background: transparent;
+  z-index: 10000;
+}
+
+.resize.top {
+  top: 0;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.resize.right {
+  top: 12px;
+  right: 0;
+  width: 8px;
+  height: calc(100% - 24px);
+  cursor: ew-resize;
+}
+
+.resize.bottom {
+  bottom: 0;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.resize.left {
+  top: 12px;
+  left: 0;
+  width: 8px;
+  height: calc(100% - 24px);
+  cursor: ew-resize;
+}
+
+/* 코너 */
+.resize.corner {
+  width: 14px;
+  height: 14px;
+}
+
+.resize.top-left {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.resize.top-right {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.resize.bottom-left {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.resize.bottom-right {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+
 .homework {
   padding: 10px;
   text-align: left;
