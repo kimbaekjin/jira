@@ -90,14 +90,11 @@ export function renderRaidDisplay(displayArea, data, characterName) {
     let completed = r.completed || false;
 
     function updateCompletedStyle() {
-      heart.classList.toggle("completed", completed);
-      goldBox.classList.toggle("completed", completed);
-
       if (completed) {
         text.style.textDecoration = "line-through";
         text.style.opacity = "0.5";
-        heart.style.opacity = "0.4";
-        goldBox.style.opacity = "0.35";
+        heart.style.opacity = "0.45";
+        goldBox.style.opacity = "0.45";
         goldBox.style.textDecoration = "line-through";
       } else {
         text.style.textDecoration = "none";
@@ -110,38 +107,38 @@ export function renderRaidDisplay(displayArea, data, characterName) {
 
     updateCompletedStyle();
 
-        heart.addEventListener("click", async () => {
-          completed = !completed;
+    heart.addEventListener("click", async () => {
+      completed = !completed;
 
-          const target = data.find(d => d.raid === r.raid);
-          if (target) target.completed = completed;
+      const target = data.find(d => d.raid === r.raid);
+      if (target) target.completed = completed;
 
-          heart.classList.remove("pop");
-          void heart.offsetWidth;
-          heart.classList.add("pop");
+      heart.classList.remove("pop");
+      void heart.offsetWidth;
+      heart.classList.add("pop");
 
-          updateCompletedStyle();
+      updateCompletedStyle();
 
-          try {
-            await fetch("/api/raid/save", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                character: characterName,
-                raids: data.map(x => ({
-                  raid: x.raid,
-                  level: x.level,
-                  gold: x.gold || false,
-                  selected: true,
-                  busFee: Number(x.busFee) || 0,
-                  completed: x.completed || false
-                }))
-              })
-            });
-          } catch (e) {
-            console.warn("완료 상태 저장 실패", e);
-          }
+      try {
+        await fetch("/api/raid/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            character: characterName,
+            raids: data.map(x => ({
+              raid: x.raid,
+              level: x.level,
+              gold: x.gold || false,
+              selected: true,
+              busFee: Number(x.busFee) || 0,
+              completed: x.completed || false
+            }))
+          })
         });
+      } catch (e) {
+        console.warn("완료 상태 저장 실패", e);
+      }
+    });
 
     displayArea.appendChild(row);
   });

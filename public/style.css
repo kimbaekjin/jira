@@ -375,51 +375,77 @@ button {
 
 /* 레이드 완료 하트 반응 */
 .raid-heart {
-  transition: opacity 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  transition: opacity 0.18s ease, filter 0.18s ease;
+  position: absolute;
+  overflow: visible;
 }
 
 .raid-heart.pop {
-  animation: raidHeartGlow 0.28s ease;
+  animation: raidHeartFlash 0.42s ease;
 }
 
-@keyframes raidHeartGlow {
+.raid-heart.pop::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 111, 145, 0.45);
+  transform: translate(-50%, -50%);
+  animation: raidHeartRing 0.42s ease-out;
+  pointer-events: none;
+}
+
+.raid-heart.pop::after {
+  content: "✦";
+  position: absolute;
+  right: -10px;
+  top: -12px;
+  font-size: 18px;
+  color: rgba(255, 111, 145, 0.9);
+  text-shadow: 0 0 10px rgba(255, 111, 145, 0.35);
+  animation: raidHeartSparkle 0.42s ease-out;
+  pointer-events: none;
+}
+
+@keyframes raidHeartFlash {
   0% {
     filter: brightness(1);
   }
-  50% {
-    filter: brightness(1.12);
+  35% {
+    filter: brightness(1.18) saturate(1.1);
   }
   100% {
     filter: brightness(1);
   }
 }
 
-/* 완료 체크 아이콘 */
-.raid-heart.completed::after {
-  content: "✓";
-  position: absolute;
-  right: -8px;
-  top: -10px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #fff7fb;
-  color: #ff5f93;
-  font-size: 16px;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 4px 10px rgba(255, 123, 165, 0.18),
-    inset 0 1px 0 rgba(255,255,255,0.8);
-  transform: rotate(-45deg);
+@keyframes raidHeartRing {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.22);
+  }
 }
 
-/* 완료된 골드박스 느낌 살짝 */
-.raid-gold-box.completed {
-  background: linear-gradient(180deg, rgba(255,245,248,0.72), rgba(255,232,240,0.78));
-  border-color: rgba(255, 151, 185, 0.34);
+@keyframes raidHeartSparkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.08) rotate(6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.85) rotate(10deg);
+  }
 }
 
 .total-gold {
@@ -676,7 +702,6 @@ button {
   height: 60px;
   position: relative;
   background: #ff6b81;
-  transform: rotate(45deg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -710,10 +735,6 @@ button {
 
 .heart-badge::after {
   top: -50%;
-}
-
-.heart-badge > * {
-  transform: rotate(-45deg);
 }
 
 /* =========================
