@@ -73,11 +73,13 @@ export function initHomeworkUI(name, card, homeworkData) {
     );
 
     let maxGauge = MAX_GAUGE;
-    let step = 40;
+    let step = 40;      // 체크 시 감소/증가용
+    let editStep = 20;  // 직접 수정 입력용
 
     if (taskName === "가디언토벌") {
       maxGauge = 100;
       step = 20;
+      editStep = 10;
     }
 
     let gauge = taskData ? taskData.gauge : maxGauge;
@@ -124,10 +126,10 @@ export function initHomeworkUI(name, card, homeworkData) {
 
       if (isNaN(val)) val = gauge;
 
-      if (val < 0 || val > maxGauge || val % step !== 0) {
-        input.value = gauge;
-        return;
-      }
+        if (val < 0 || val > maxGauge || val % editStep !== 0) {
+          input.value = gauge;
+          return;
+        }
 
       gauge = val;
 
