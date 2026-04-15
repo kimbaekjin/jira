@@ -73,11 +73,11 @@ export function initHomeworkUI(name, card, homeworkData) {
     );
 
     let maxGauge = MAX_GAUGE;
-    let step = 20;
+    let step = 40;
 
     if (taskName === "가디언토벌") {
       maxGauge = 100;
-      step = 10;
+      step = 20;
     }
 
     let gauge = taskData ? taskData.gauge : maxGauge;
