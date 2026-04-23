@@ -1,4 +1,4 @@
-export const characterList = [
+export const defaultCharacters = [
   "혜진이",
   "응애나또아가할래",
   "나혜찌니",
@@ -9,6 +9,26 @@ export const characterList = [
   "콩당콩설",
   "이콩덩",
   "다굥이의기묘한모험",
+];
+
+export const myCharacters = [
+    "스읔꺼내보니유산스읔",
+    "바훈망치",
+    "배쉬증함",
+    "상급소환수서머너",
+    "휴지없어서손으로또닦음",
+    "리퍼님거절누르는것도힘듬",
+    "암살자길동",
+    "리퍼길동이",
+    "리퍼길동",
+    "악마길동",
+    "또딴a",
+    "이런곰같은여우를봤니",
+    "저달호",
+    "김겸필",
+    "이겸필",
+    "박겸필",
+    "강겸필",
 ];
 
 export const raidGoldTable = {

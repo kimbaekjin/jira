@@ -1,8 +1,62 @@
-import { characterList } from "./js/data/data.js";
+import { defaultCharacters, myCharacters } from "./js/data/data.js";
 import { createCard } from "./js/card/card.js";
 import { initRaidUI } from "./js/raid/raidUI.js";
 import { initHomeworkUI, autoUpdateDailyGaugesDB } from "./js/homework/homeworkUI.js";
 
+// =========================
+// mode 분기
+// =========================
+const params = new URLSearchParams(window.location.search);
+const mode = params.get("mode");
+const characterList = mode === "my" ? myCharacters : defaultCharacters;
+
+// =========================
+// 상단 고정 버튼 생성
+// =========================
+function initModeToggleButton() {
+  const oldBtn = document.getElementById("modeToggleFloatingBtn");
+  if (oldBtn) oldBtn.remove();
+
+  const btn = document.createElement("button");
+  btn.id = "modeToggleFloatingBtn";
+  btn.textContent = mode === "my" ? "전체 보기" : "내 정보보기";
+
+  Object.assign(btn.style, {
+    position: "fixed",
+    top: "16px",
+    right: "16px",
+    zIndex: "9999",
+    border: "none",
+    borderRadius: "12px",
+    padding: "10px 14px",
+    background: "#ff8fb1",
+    color: "#fff",
+    fontWeight: "700",
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+  });
+
+  btn.addEventListener("click", () => {
+    if (mode === "my") {
+      window.location.href = "/index.html";
+    } else {
+      window.location.href = "/index.html?mode=my";
+    }
+  });
+
+  document.body.appendChild(btn);
+}
+
+// =========================
+// document title 변경
+// =========================
+function initPageTitle() {
+  document.title = mode === "my" ? "내 캐릭터 정보" : "숙제 체크";
+}
+
+// =========================
+// 캐릭터 기본 정보 fetch
+// =========================
 async function getCharacter(name) {
   try {
     const res = await fetch(`/character/${encodeURIComponent(name)}`);
@@ -12,6 +66,9 @@ async function getCharacter(name) {
   }
 }
 
+// =========================
+// music box resize
+// =========================
 function initMusicBoxResize() {
   const box = document.getElementById("musicBox");
   if (!box) return;
@@ -125,14 +182,14 @@ function initMusicBoxResize() {
     }
 
     if (newWidth < minWidth) {
-      if (currentDir.includes("left")) {
+      if (currentDir && currentDir.includes("left")) {
         newLeft -= (minWidth - newWidth);
       }
       newWidth = minWidth;
     }
 
     if (newHeight < minHeight) {
-      if (currentDir.includes("top")) {
+      if (currentDir && currentDir.includes("top")) {
         newTop -= (minHeight - newHeight);
       }
       newHeight = minHeight;
@@ -150,6 +207,9 @@ function initMusicBoxResize() {
   });
 }
 
+// =========================
+// music box drag
+// =========================
 function initMusicBoxDrag() {
   const box = document.getElementById("musicBox");
   const header = box?.querySelector(".music-title");
@@ -169,7 +229,6 @@ function initMusicBoxDrag() {
 
     const rect = box.getBoundingClientRect();
 
-    // right/bottom → left/top 기준으로 변환
     box.style.left = `${rect.left}px`;
     box.style.top = `${rect.top}px`;
     box.style.right = "auto";
@@ -198,6 +257,9 @@ function initMusicBoxDrag() {
   });
 }
 
+// =========================
+// youtube search
+// =========================
 function initYoutubeSearch() {
   const API_KEY = "AIzaSyBbryXAdmVMA8VjR2-LJViqUhBf522wv9c";
 
@@ -217,7 +279,9 @@ function initYoutubeSearch() {
 
     results.innerHTML = "";
 
-    data.items.forEach(item => {
+    if (!data.items) return;
+
+    data.items.forEach((item) => {
       const videoId = item.id.videoId;
       const title = item.snippet.title;
       const thumb = item.snippet.thumbnails.medium.url;
@@ -251,29 +315,46 @@ function initYoutubeSearch() {
   });
 }
 
+// =========================
+// 메인 init
+// =========================
 async function init() {
   const container = document.getElementById("container");
+  if (!container) return;
+
+  container.innerHTML = "";
 
   for (const name of characterList) {
-    const card = createCard(name);
-    container.appendChild(card);
+    try {
+      const card = createCard(name);
+      container.appendChild(card);
 
-    await initRaidUI(card, name);
+      await initRaidUI(card, name);
 
-    const data = await getCharacter(name);
+      const data = await getCharacter(name);
 
-    card.querySelector(".char-img").src =
-      data.CharacterImage || "/images/placeholder.png";
-    card.querySelector(".name").innerText = data.CharacterName || name;
-    card.querySelector(".level").innerText = `Lv. ${data.ItemAvgLevel || "-"}`;
-    card.querySelector(".power").innerText = `전투력 ${data.CombatPower || "-"}`;
+      const imgEl = card.querySelector(".char-img");
+      const nameEl = card.querySelector(".name");
+      const levelEl = card.querySelector(".level");
+      const powerEl = card.querySelector(".power");
 
-    const homeworkData = await autoUpdateDailyGaugesDB(name);
-    initHomeworkUI(name, card, homeworkData);
+      if (imgEl) imgEl.src = data.CharacterImage || "/images/placeholder.png";
+      if (nameEl) nameEl.innerText = data.CharacterName || name;
+      if (levelEl) levelEl.innerText = `Lv. ${data.ItemAvgLevel || "-"}`;
+      if (powerEl) powerEl.innerText = `전투력 ${data.CombatPower || "-"}`;
+
+      const homeworkData = await autoUpdateDailyGaugesDB(name);
+      initHomeworkUI(name, card, homeworkData);
+    } catch (err) {
+      console.error(`[초기화 실패] ${name}`, err);
+    }
   }
 
   initMusicBoxResize();
   initMusicBoxDrag();
   initYoutubeSearch();
 }
+
+initPageTitle();
+initModeToggleButton();
 init();
