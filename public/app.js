@@ -10,6 +10,36 @@ const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
 const characterList = mode === "my" ? myCharacters : defaultCharacters;
 
+
+function initCharacterSearchButton() {
+  const oldBtn = document.getElementById("characterSearchFloatingBtn");
+  if (oldBtn) oldBtn.remove();
+
+  const btn = document.createElement("button");
+  btn.id = "characterSearchFloatingBtn";
+  btn.textContent = "캐릭 검색";
+
+  Object.assign(btn.style, {
+    position: "fixed",
+    top: "16px",
+    left: "16px",
+    zIndex: "9999",
+    border: "none",
+    borderRadius: "12px",
+    padding: "10px 14px",
+    background: "#ff8fb1",
+    color: "#fff",
+    fontWeight: "700",
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+  });
+
+  btn.addEventListener("click", () => {
+    window.location.href = "/search.html";
+  });
+
+  document.body.appendChild(btn);
+}
 // =========================
 // 상단 고정 버튼 생성
 // =========================
@@ -357,4 +387,5 @@ async function init() {
 
 initPageTitle();
 initModeToggleButton();
+initCharacterSearchButton();
 init();

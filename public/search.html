@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>캐릭터 검색</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="search-page-header">
+    <button id="backHomeBtn" class="search-nav-btn">전체보기</button>
+    <button id="myRosterBtn" class="search-nav-btn">내 원정대보기</button>
+  </div>
+
+  <div class="search-box">
+    <div class="search-title">캐릭터 검색</div>
+    <div class="search-desc">
+      캐릭터명을 입력하면 해당 원정대의 상위 6개 캐릭터를 기존 카드 UI로 보여줍니다.
+    </div>
+
+    <div class="search-row">
+      <input id="searchCharacterInput" placeholder="캐릭터명 입력" />
+      <button id="searchCharacterBtn">검색</button>
+    </div>
+
+    <div id="searchStatus" class="search-status"></div>
+  </div>
+
+  <div class="container" id="container"></div>
+
+  <script type="module" src="./search.js"></script>
+</body>
+</html>

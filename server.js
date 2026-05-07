@@ -46,6 +46,65 @@ const armoryCache = new Map();
 const PROFILE_TTL = 10 * 60 * 1000; // 10분
 const CACHE_TTL = 10 * 60 * 1000;   // 10분
 
+// ================= ROSTER API =================
+app.get("/api/search-roster/:name", async (req, res) => {
+  const { name } = req.params;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: "캐릭터명이 필요합니다." });
+  }
+
+  const key = `roster-${name}`;
+  const cached = getCache(armoryCache, key, CACHE_TTL);
+
+  if (cached) {
+    console.log("[CACHE HIT] roster:", name);
+    return res.json(cached);
+  }
+
+  const encoded = encodeURIComponent(name);
+  const url = `https://developer-lostark.game.onstove.com/characters/${encoded}/siblings`;
+
+  console.time(`[ROSTER FETCH] ${name}`);
+
+  const data = await safeFetchJson(
+    url,
+    {
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${API_KEY}`
+      }
+    },
+    5000
+  );
+
+  console.timeEnd(`[ROSTER FETCH] ${name}`);
+
+  if (!Array.isArray(data)) {
+    return res.json([]);
+  }
+
+  const top6 = data
+    .map((char) => {
+      const itemLevelNumber = Number(
+        String(char.ItemAvgLevel || "0").replace(/,/g, "")
+      );
+
+      return {
+        serverName: char.ServerName,
+        name: char.CharacterName,
+        className: char.CharacterClassName,
+        itemLevel: char.ItemAvgLevel,
+        itemLevelNumber
+      };
+    })
+    .sort((a, b) => b.itemLevelNumber - a.itemLevelNumber)
+    .slice(0, 6);
+
+  setCache(armoryCache, key, top6);
+  res.json(top6);
+});
+
 // ================= 유틸 =================
 function getCache(cacheMap, key, ttl) {
   const cached = cacheMap.get(key);
